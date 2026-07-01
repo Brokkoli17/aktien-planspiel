@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aktien-Planspiel Sammelgeraet</title>
+    <title>Aktien-Planspiel Dashboard</title>
     <meta
       name="description"
-      content="Sammelseite fuer Gewinn- und Verlustcodes mit Saeulendiagramm."
+      content="Dashboard fuer automatisch uebertragene Gewinne und Verluste."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -15,7 +15,7 @@
       <div class="topbar-inner">
         <div>
           <p class="topbar-label">Moderator</p>
-          <h1>Sammelgeraet</h1>
+          <h1>Live-Ergebnisse</h1>
         </div>
         <div class="budget-box result-budget-box">
           <div class="budget-line">
@@ -32,13 +32,11 @@
 
     <main class="page">
       <section class="actions card">
-        <p class="variant-label">Code einsammeln</p>
-        <textarea id="import-code" class="code-textarea" placeholder="Code hier einfuegen"></textarea>
+        <p class="variant-label">Steuerung</p>
         <div class="action-buttons">
-          <button id="import-button" type="button">Code importieren</button>
           <button id="dashboard-2022-button" type="button" class="secondary-button">2022</button>
           <button id="dashboard-2025-button" type="button" class="secondary-button">2025</button>
-          <button id="dashboard-reset-button" type="button" class="danger-button">Alle Codes loeschen</button>
+          <button id="dashboard-reset-button" type="button" class="danger-button">Alle Ergebnisse loeschen</button>
         </div>
         <p id="dashboard-status" class="sync-status"></p>
       </section>
@@ -51,13 +49,12 @@
           </div>
         </div>
         <div id="chart-empty" class="results-empty hidden">
-          Noch keine Ergebnisse importiert.
+          Noch keine Ergebnisse eingegangen.
         </div>
         <div id="chart-area" class="chart-area"></div>
       </section>
     </main>
 
-    <script src="submission-codec.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

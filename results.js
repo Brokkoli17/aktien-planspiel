@@ -1,3 +1,13 @@
+const appConfig = window.STOCK_APP_CONFIG || {};
+const STORAGE_VERSION = appConfig.storageVersion || "stock-game-v4";
+const STORAGE_KEYS = {
+  version: "stock-game-storage-version",
+  allocations: `${STORAGE_VERSION}-allocations`,
+  participantId: `${STORAGE_VERSION}-participant-id`
+};
+
+clearLegacyStorage();
+
 const params = new URLSearchParams(window.location.search);
 const selectedYear = params.get("year") === "2025" ? "2025" : "2022";
 
@@ -23,16 +33,12 @@ const elements = {
   chartValueLabel: document.querySelector("#chart-value-label"),
   chartReturnLabel: document.querySelector("#chart-return-label"),
   singleResultBar: document.querySelector("#single-result-bar"),
-  syncStatus: document.querySelector("#sync-status"),
-  resultCode: document.querySelector("#result-code"),
-  copyCodeButton: document.querySelector("#copy-code-button")
+  syncStatus: document.querySelector("#sync-status")
 };
-
-elements.copyCodeButton.addEventListener("click", copyCodeToClipboard);
 
 renderResultsPage();
 
-function renderResultsPage() {
+async function renderResultsPage() {
   const allocations = loadAllocations();
   const positions = getSelectedPositions(allocations, selectedYear);
   const comparison = STOCK_APP_DATA.comparisons[selectedYear];
@@ -49,21 +55,19 @@ function renderResultsPage() {
   const totalValue = positions.reduce((sum, position) => sum + position.comparisonValue, 0);
   const profit = totalValue - totalInvested;
   const returnRate = totalInvested === 0 ? 0 : profit / totalInvested;
-  const submission = {
+
+  elements.resultInvested.textContent = formatCurrency(totalInvested);
+  elements.resultHeadline.textContent = `Gewinn / Verlust ${comparison.label}`;
+  renderSingleChart(profit, returnRate);
+
+  await submitResult({
     participantId: getParticipantId(),
     year: selectedYear,
     invested: totalInvested,
     totalValue,
     profit,
     returnRate
-  };
-
-  elements.resultInvested.textContent = formatCurrency(totalInvested);
-  elements.resultHeadline.textContent = `Gewinn / Verlust ${comparison.label}`;
-  renderSingleChart(profit, returnRate);
-  elements.resultCode.value = encodeSubmission(submission);
-  elements.syncStatus.textContent =
-    "Diesen Code kannst du auf dem Sammelgeraet einfuegen.";
+  });
 }
 
 function renderSingleChart(profit, returnRate) {
@@ -89,19 +93,13 @@ function getSelectedPositions(allocations, year) {
       const shares = allocations[stock.id];
       const amount = shares * stock.startPrice;
       const comparisonValue = shares * stock.prices[year];
-
-      return {
-        ...stock,
-        amount,
-        shares,
-        comparisonValue
-      };
+      return { amount, comparisonValue };
     });
 }
 
 function loadAllocations() {
   try {
-    const parsed = JSON.parse(localStorage.getItem("stock-game-allocations") ?? "{}");
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.allocations) ?? "{}");
     return Object.fromEntries(
       Object.entries(parsed).map(([stockId, shares]) => [stockId, sanitizeShareCount(Number(shares))])
     );
@@ -111,24 +109,69 @@ function loadAllocations() {
 }
 
 function getParticipantId() {
-  const existing = localStorage.getItem("stock-game-participant-id");
+  const existing = localStorage.getItem(STORAGE_KEYS.participantId);
   if (existing) {
     return existing;
   }
 
   const created = `T${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-  localStorage.setItem("stock-game-participant-id", created);
+  localStorage.setItem(STORAGE_KEYS.participantId, created);
   return created;
 }
 
-async function copyCodeToClipboard() {
-  try {
-    await navigator.clipboard.writeText(elements.resultCode.value);
-    elements.syncStatus.textContent = "Code kopiert. Jetzt auf dem Sammelgeraet einfuegen.";
-  } catch {
-    elements.resultCode.select();
-    elements.syncStatus.textContent = "Bitte den Code manuell kopieren.";
+async function submitResult(payload) {
+  const collectorUrl = getCollectorUrl();
+  if (!collectorUrl) {
+    elements.syncStatus.textContent = "Sammelserver ist gerade nicht verbunden.";
+    return;
   }
+
+  try {
+    const response = await fetch(`${collectorUrl}/api/submissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("submit failed");
+    }
+
+    elements.syncStatus.textContent =
+      `Automatisch uebertragen: ${payload.participantId}`;
+  } catch {
+    elements.syncStatus.textContent =
+      "Automatische Uebertragung fehlgeschlagen.";
+  }
+}
+
+function getCollectorUrl() {
+  if (typeof appConfig.collectorUrl === "string" && appConfig.collectorUrl.trim()) {
+    return appConfig.collectorUrl.replace(/\/$/, "");
+  }
+  return "";
+}
+
+function clearLegacyStorage() {
+  const storedVersion = localStorage.getItem(STORAGE_KEYS.version);
+  if (storedVersion === STORAGE_VERSION) {
+    return;
+  }
+
+  [
+    "stock-game-allocations",
+    "stock-game-participant-id",
+    "stock-game-collected-submissions",
+    "stock-game-storage-version",
+    "stock-game-v4-allocations",
+    "stock-game-v4-participant-id"
+  ].forEach((key) => {
+    localStorage.removeItem(key);
+  });
+
+  localStorage.setItem(STORAGE_KEYS.version, STORAGE_VERSION);
 }
 
 function formatCurrency(value) {
@@ -139,6 +182,5 @@ function sanitizeShareCount(value) {
   if (Number.isNaN(value) || value < 0) {
     return 0;
   }
-
   return Math.round(value);
 }

@@ -1,53 +1,50 @@
 # Aktien-Planspiel fuer den Vortrag
 
-Die Website ist jetzt komplett statisch und GitHub-Pages-tauglich:
+Die Website ist jetzt auf automatische Uebertragung umgestellt:
 
 - `index.html` fuer die Auswahl auf den Handys
-- `results.html` fuer den persoenlichen Depotvergleich
-- `dashboard.html` fuer dein Sammelgeraet mit Saeulendiagramm
+- `results.html` fuer den persoenlichen Depotvergleich mit automatischem Senden
+- `dashboard.html` fuer dein Live-Dashboard auf deinem Rechner
 
 ## Bedienung
 
 - Pro Aktie wird nur mit ganzen Aktien gearbeitet.
 - Jede Person oeffnet ihren `Depotvergleich`.
-- Auf der Ergebnis-Seite wird ein Sammelcode erzeugt.
-- Auf deinem Sammelgeraet fuegst du diesen Code in `dashboard.html` ein.
-- Das Sammelgeraet zeigt alle importierten Gewinne und Verluste als Saeulendiagramm.
+- Die Ergebnis-Seite sendet automatisch an dein Dashboard.
+- Dein Dashboard auf dem Rechner aktualisiert sich selbst.
 
 ## Starten
 
 ```powershell
-python -m http.server 8080
+node server.js
 ```
 
 Danach im Browser aufrufen:
 
-- `http://127.0.0.1:8080/` fuer die Teilnehmer
-- `http://127.0.0.1:8080/dashboard.html` fuer dein Sammelgeraet
+- `https://brokkoli17.github.io/aktien-planspiel/` fuer die Teilnehmer
+- `http://127.0.0.1:8787/dashboard.html` fuer dein Live-Dashboard
 
-## GitHub Pages
+## Wichtiger Hinweis
 
-Du kannst die komplette Website statisch auf GitHub Pages hosten. Es wird kein Server und keine Datenbank benoetigt.
+Damit die automatische Uebertragung von der GitHub-Seite zu deinem Rechner funktioniert, braucht dein lokaler Dashboard-Server eine erreichbare `https`-Adresse. Diese richte ich ueber einen Tunnel ein.
 
-Praktischer Ablauf:
+Vor jedem Vortrag sollte deshalb laufen:
 
-1. Publikum benutzt die GitHub-Seite
-2. Jeder erzeugt auf `results.html` seinen Sammelcode
-3. Du oeffnest `dashboard.html` auf einem einzigen Geraet
-4. Dort fuegst du die Codes nacheinander ein
-
-Das muss nicht live passieren. Die importierten Codes bleiben auf dem Sammelgeraet im Browser gespeichert.
+1. `node server.js`
+2. Tunnel starten
+3. `config.js` mit der Tunnel-URL in GitHub Pages aktualisieren
 
 ## Dateien
 
 - `index.html` enthaelt die Auswahlseite
-- `results.html` enthaelt den persoenlichen Depotvergleich und den Sammelcode
+- `results.html` enthaelt den persoenlichen Depotvergleich
 - `dashboard.html` enthaelt das Live-Dashboard
 - `styles.css` enthaelt das Layout
 - `app.js` enthaelt die Auswahl- und Budgetlogik
-- `results.js` erzeugt das Diagramm und den Sammelcode
-- `dashboard.js` importiert Sammelcodes und zeigt das Saeulendiagramm
-- `submission-codec.js` kodiert und dekodiert Sammelcodes
+- `results.js` erzeugt das Diagramm und sendet automatisch
+- `dashboard.js` laedt automatisch alle Einsendungen
+- `config.js` enthaelt die Zieladresse des Sammelservers
+- `server.js` ist dein lokaler Sammelserver
 - `data.js` enthaelt die Aktien und Jahreskurse
 
 ## Daten anpassen

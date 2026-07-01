@@ -1,3 +1,13 @@
+const appConfig = window.STOCK_APP_CONFIG || {};
+const STORAGE_VERSION = appConfig.storageVersion || "stock-game-v4";
+const STORAGE_KEYS = {
+  version: "stock-game-storage-version",
+  allocations: `${STORAGE_VERSION}-allocations`,
+  participantId: `${STORAGE_VERSION}-participant-id`
+};
+
+clearLegacyStorage();
+
 const state = {
   allocations: loadAllocations()
 };
@@ -39,7 +49,7 @@ function renderAll() {
 }
 
 function renderSliderList() {
-  const stocks = getSelectableStocks();
+  const stocks = STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
   elements.sliderList.innerHTML = stocks.map((stock) => renderSliderRow(stock)).join("");
 
   document.querySelectorAll("[data-stock-id]").forEach((input) => {
@@ -50,7 +60,7 @@ function renderSliderList() {
 
 function renderSliderRow(stock) {
   const shares = state.allocations[stock.id] ?? 0;
-  const maxShares = getSliderMaxShares(stock);
+  const maxShares = Math.floor(STOCK_APP_DATA.startBudget / stock.startPrice);
   const fill = maxShares === 0 ? 0 : (shares / maxShares) * 100;
 
   return `
@@ -76,7 +86,7 @@ function renderSliderRow(stock) {
 
 function handleSliderInput(event) {
   const stockId = event.target.dataset.stockId;
-  const stock = getStockById(stockId);
+  const stock = STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
   const currentShares = state.allocations[stockId] ?? 0;
   const requestedShares = sanitizeShareCount(Number(event.target.value));
   const investedWithoutCurrent = getTotalAllocated() - currentShares * stock.startPrice;
@@ -94,18 +104,6 @@ function handleSliderInput(event) {
   renderAll();
 }
 
-function getSelectableStocks() {
-  return STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
-}
-
-function getStockById(stockId) {
-  return STOCK_APP_DATA.stocks.find((stock) => stock.id === stockId);
-}
-
-function getSliderMaxShares(stock) {
-  return Math.floor(STOCK_APP_DATA.startBudget / stock.startPrice);
-}
-
 function updateBudgetSummary() {
   const totalAllocated = getTotalAllocated();
   const remaining = STOCK_APP_DATA.startBudget - totalAllocated;
@@ -118,14 +116,14 @@ function updateBudgetSummary() {
 
 function getTotalAllocated() {
   return Object.entries(state.allocations).reduce((sum, [stockId, shares]) => {
-    const stock = getStockById(stockId);
+    const stock = STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
     return sum + shares * stock.startPrice;
   }, 0);
 }
 
 function loadAllocations() {
   try {
-    const parsed = JSON.parse(localStorage.getItem("stock-game-allocations") ?? "{}");
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.allocations) ?? "{}");
     return Object.fromEntries(
       Object.entries(parsed).map(([stockId, shares]) => [stockId, sanitizeShareCount(Number(shares))])
     );
@@ -135,11 +133,31 @@ function loadAllocations() {
 }
 
 function persistAllocations() {
-  localStorage.setItem("stock-game-allocations", JSON.stringify(state.allocations));
+  localStorage.setItem(STORAGE_KEYS.allocations, JSON.stringify(state.allocations));
 }
 
 function openResultsPage(year) {
   window.location.href = `results.html?year=${year}`;
+}
+
+function clearLegacyStorage() {
+  const storedVersion = localStorage.getItem(STORAGE_KEYS.version);
+  if (storedVersion === STORAGE_VERSION) {
+    return;
+  }
+
+  [
+    "stock-game-allocations",
+    "stock-game-participant-id",
+    "stock-game-collected-submissions",
+    "stock-game-storage-version",
+    "stock-game-v4-allocations",
+    "stock-game-v4-participant-id"
+  ].forEach((key) => {
+    localStorage.removeItem(key);
+  });
+
+  localStorage.setItem(STORAGE_KEYS.version, STORAGE_VERSION);
 }
 
 function formatCurrency(value) {
