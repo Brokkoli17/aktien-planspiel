@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aktien-Planspiel</title>
+    <meta
+      name="description"
+      content="Einfache Abstimmungsseite fuer ein Aktien-Planspiel mit 10.000 Euro Budget."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <p class="topbar-label">Aktien-Planspiel</p>
+          <h1>10.000 Euro verteilen</h1>
+        </div>
+        <div class="budget-box">
+          <div class="budget-line">
+            <span>Budget</span>
+            <strong id="start-budget">10.000,00 €</strong>
+          </div>
+          <div class="budget-line">
+            <span>Uebrig</span>
+            <strong id="remaining-budget">10.000,00 €</strong>
+          </div>
+          <div class="budget-line muted">
+            <span>Investiert</span>
+            <strong id="invested-total">0,00 €</strong>
+          </div>
+          <div class="budget-bar">
+            <div id="budget-progress" class="budget-progress"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="intro card">
+        <p>
+          Waehle ganze Aktien. Die komplette Zeile dient als Schieberegler.
+        </p>
+      </section>
+
+      <section class="variant card">
+        <div class="variant-header">
+          <div>
+            <p class="variant-label">Auswahl</p>
+            <h2>Aktienliste</h2>
+          </div>
+        </div>
+        <div id="stocks-slider" class="stocks-list" aria-live="polite"></div>
+      </section>
+
+      <section class="actions card">
+        <p class="variant-label">Ergebnis</p>
+        <div class="action-buttons">
+          <button id="evaluate-2022-button" type="button">Depotvergleich 2022</button>
+          <button id="evaluate-2025-button" type="button" class="secondary-button">
+            Depotvergleich 2025
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

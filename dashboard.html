@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aktien-Planspiel Sammelgeraet</title>
+    <meta
+      name="description"
+      content="Sammelseite fuer Gewinn- und Verlustcodes mit Saeulendiagramm."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <p class="topbar-label">Moderator</p>
+          <h1>Sammelgeraet</h1>
+        </div>
+        <div class="budget-box result-budget-box">
+          <div class="budget-line">
+            <span>Ansicht</span>
+            <strong id="dashboard-year">2022</strong>
+          </div>
+          <div class="budget-line">
+            <span>Teilnehmer</span>
+            <strong id="dashboard-count">0</strong>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="actions card">
+        <p class="variant-label">Code einsammeln</p>
+        <textarea id="import-code" class="code-textarea" placeholder="Code hier einfuegen"></textarea>
+        <div class="action-buttons">
+          <button id="import-button" type="button">Code importieren</button>
+          <button id="dashboard-2022-button" type="button" class="secondary-button">2022</button>
+          <button id="dashboard-2025-button" type="button" class="secondary-button">2025</button>
+          <button id="dashboard-reset-button" type="button" class="danger-button">Alle Codes loeschen</button>
+        </div>
+        <p id="dashboard-status" class="sync-status"></p>
+      </section>
+
+      <section class="results card">
+        <div class="results-header">
+          <div>
+            <p class="variant-label">Saeulendiagramm</p>
+            <h2>Gewinn / Verlust der Teilnehmer</h2>
+          </div>
+        </div>
+        <div id="chart-empty" class="results-empty hidden">
+          Noch keine Ergebnisse importiert.
+        </div>
+        <div id="chart-area" class="chart-area"></div>
+      </section>
+    </main>
+
+    <script src="submission-codec.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

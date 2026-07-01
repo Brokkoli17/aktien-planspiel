@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aktien-Planspiel Auswertung</title>
+    <meta
+      name="description"
+      content="Diagramm-Auswertung des Aktien-Planspiels fuer ein ausgewaehltes Jahr."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <p class="topbar-label">Aktien-Planspiel</p>
+          <h1>Depotvergleich</h1>
+        </div>
+        <div class="budget-box result-budget-box">
+          <div class="budget-line">
+            <span>Jahr</span>
+            <strong id="result-year">2022</strong>
+          </div>
+          <div class="budget-line">
+            <span>Investiert</span>
+            <strong id="result-invested">0,00 €</strong>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="results card">
+        <div class="results-header">
+          <div>
+            <p class="variant-label">Diagramm</p>
+            <h2 id="result-headline">Gewinn / Verlust</h2>
+          </div>
+          <a class="back-link" href="index.html">Zurueck zur Auswahl</a>
+        </div>
+        <p id="sync-status" class="sync-status"></p>
+
+        <div id="results-empty" class="results-empty hidden">
+          Noch keine Auswahl vorhanden. Bitte zuerst Aktien auswaehlen.
+        </div>
+
+        <div id="results-content" class="results-content">
+          <div class="single-chart-panel">
+            <div class="single-chart-scale">
+              <span id="chart-max-label">0,00 €</span>
+              <span>0,00 €</span>
+              <span id="chart-min-label">0,00 €</span>
+            </div>
+            <div class="single-chart-stage">
+              <div class="single-chart-zero-line"></div>
+              <div id="single-result-bar" class="single-result-bar"></div>
+            </div>
+            <div class="single-chart-footer">
+              <strong id="chart-value-label">0,00 €</strong>
+              <span id="chart-return-label">0,00 %</span>
+            </div>
+          </div>
+          <div class="code-panel">
+            <p class="variant-label">Sammelcode</p>
+            <textarea id="result-code" class="code-textarea" readonly></textarea>
+            <div class="action-buttons">
+              <button id="copy-code-button" type="button">Code kopieren</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="submission-codec.js"></script>
+    <script src="data.js"></script>
+    <script src="results.js"></script>
+  </body>
+</html>
