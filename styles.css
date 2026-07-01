@@ -175,6 +175,7 @@ button {
   margin: 0;
   opacity: 0.01;
   cursor: ew-resize;
+  z-index: 2;
 }
 
 .row-name,
@@ -184,6 +185,7 @@ button {
   position: relative;
   z-index: 1;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .row-name,
@@ -387,6 +389,12 @@ button {
   gap: 16px;
   margin-top: 12px;
   font-size: 1rem;
+}
+
+.detail-chart-panel {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .positive {

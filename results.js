@@ -33,7 +33,8 @@ const elements = {
   chartValueLabel: document.querySelector("#chart-value-label"),
   chartReturnLabel: document.querySelector("#chart-return-label"),
   singleResultBar: document.querySelector("#single-result-bar"),
-  syncStatus: document.querySelector("#sync-status")
+  syncStatus: document.querySelector("#sync-status"),
+  detailChart: document.querySelector("#detail-chart")
 };
 
 renderResultsPage();
@@ -59,6 +60,7 @@ async function renderResultsPage() {
   elements.resultInvested.textContent = formatCurrency(totalInvested);
   elements.resultHeadline.textContent = `Gewinn / Verlust ${comparison.label}`;
   renderSingleChart(profit, returnRate);
+  renderDetailChart(positions);
 
   await submitResult({
     participantId: getParticipantId(),
@@ -84,6 +86,31 @@ function renderSingleChart(profit, returnRate) {
   elements.singleResultBar.className = `single-result-bar ${directionClass}`;
   elements.singleResultBar.style.height = `${heightPercent}%`;
   elements.singleResultBar.style.alignSelf = profit >= 0 ? "end" : "start";
+}
+
+function renderDetailChart(positions) {
+  const entries = positions.map((position) => ({
+    name: position.name,
+    change: position.comparisonValue - position.amount
+  }));
+  const maxChange = Math.max(...entries.map((entry) => Math.abs(entry.change)), 1);
+
+  elements.detailChart.innerHTML = entries
+    .sort((left, right) => right.change - left.change)
+    .map((entry) => {
+      const width = Math.max(4, Math.round((Math.abs(entry.change) / maxChange) * 100));
+      const directionClass = entry.change >= 0 ? "chart-bar-positive" : "chart-bar-negative";
+      return `
+        <div class="chart-row">
+          <span class="chart-label">${escapeHtml(entry.name)}</span>
+          <div class="chart-bar-wrap">
+            <div class="chart-bar ${directionClass}" style="width:${width}%"></div>
+          </div>
+          <strong class="${entry.change >= 0 ? "positive" : "negative"}">${formatCurrency(entry.change)}</strong>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function getSelectedPositions(allocations, year) {
@@ -183,4 +210,13 @@ function sanitizeShareCount(value) {
     return 0;
   }
   return Math.round(value);
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
