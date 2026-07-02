@@ -9,17 +9,19 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 });
 
 const elements = {
-  dashboardCount2022: document.querySelector("#dashboard-count-2022"),
+  dashboardCount2022: document.querySelector("#dashboard-count-2022") || document.querySelector("#dashboard-count"),
   dashboardCount2026: document.querySelector("#dashboard-count-2026"),
   dashboardStatus: document.querySelector("#dashboard-status"),
-  chartEmpty2022: document.querySelector("#chart-empty-2022"),
+  chartEmpty2022: document.querySelector("#chart-empty-2022") || document.querySelector("#chart-empty"),
   chartEmpty2026: document.querySelector("#chart-empty-2026"),
-  chartArea2022: document.querySelector("#chart-area-2022"),
+  chartArea2022: document.querySelector("#chart-area-2022") || document.querySelector("#chart-area"),
   chartArea2026: document.querySelector("#chart-area-2026"),
   resetButton: document.querySelector("#dashboard-reset-button")
 };
 
-elements.resetButton.addEventListener("click", resetDashboard);
+if (elements.resetButton) {
+  elements.resetButton.addEventListener("click", resetDashboard);
+}
 
 loadDashboard();
 state.pollHandle = window.setInterval(loadDashboard, 2000);
@@ -35,15 +37,23 @@ async function loadDashboard() {
       .filter((item) => item.year === "2026")
       .sort((left, right) => right.profit - left.profit);
 
-    elements.dashboardCount2022.textContent = String(data2022.length);
-    elements.dashboardCount2026.textContent = String(data2026.length);
-    elements.dashboardStatus.textContent =
-      `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE")}`;
+    if (elements.dashboardCount2022) {
+      elements.dashboardCount2022.textContent = String(data2022.length);
+    }
+    if (elements.dashboardCount2026) {
+      elements.dashboardCount2026.textContent = String(data2026.length);
+    }
+    if (elements.dashboardStatus) {
+      elements.dashboardStatus.textContent =
+        `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE")}`;
+    }
 
     renderYearChart("2022", data2022);
     renderYearChart("2026", data2026);
   } catch {
-    elements.dashboardStatus.textContent = "Dashboard konnte nicht geladen werden.";
+    if (elements.dashboardStatus) {
+      elements.dashboardStatus.textContent = "Dashboard konnte nicht geladen werden.";
+    }
     renderYearChart("2022", []);
     renderYearChart("2026", []);
   }
@@ -53,7 +63,13 @@ function renderYearChart(year, submissions) {
   const emptyElement = year === "2022" ? elements.chartEmpty2022 : elements.chartEmpty2026;
   const areaElement = year === "2022" ? elements.chartArea2022 : elements.chartArea2026;
 
-  emptyElement.classList.toggle("hidden", submissions.length > 0);
+  if (!areaElement) {
+    return;
+  }
+
+  if (emptyElement) {
+    emptyElement.classList.toggle("hidden", submissions.length > 0);
+  }
 
   if (!submissions.length) {
     areaElement.innerHTML = renderColumnChartShell([], 10, true);
@@ -105,9 +121,13 @@ async function resetDashboard() {
   try {
     await fetch(`${getCollectorUrl()}/api/submissions/reset`, { method: "POST" });
     await loadDashboard();
-    elements.dashboardStatus.textContent = "Alle bisherigen Ergebnisse wurden geloescht.";
+    if (elements.dashboardStatus) {
+      elements.dashboardStatus.textContent = "Alle bisherigen Ergebnisse wurden geloescht.";
+    }
   } catch {
-    elements.dashboardStatus.textContent = "Loeschen fehlgeschlagen.";
+    if (elements.dashboardStatus) {
+      elements.dashboardStatus.textContent = "Loeschen fehlgeschlagen.";
+    }
   }
 }
 
