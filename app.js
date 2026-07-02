@@ -38,6 +38,7 @@ const elements = {
   popupInvestedValue: document.querySelector("#popup-invested-value"),
   popupMaxValue: document.querySelector("#popup-max-value"),
   popupPad: document.querySelector("#popup-pad"),
+  popupDeleteButton: document.querySelector("#popup-delete-button"),
   popupSaveButton: document.querySelector("#popup-save-button")
 };
 
@@ -46,6 +47,7 @@ elements.startBudget.textContent = formatCurrency(STOCK_APP_DATA.startBudget);
 elements.evaluate2022Button.addEventListener("click", () => openResultsPage("2022"));
 elements.popupBackdrop.addEventListener("click", closePopup);
 elements.popupPad.addEventListener("click", handleNumpadClick);
+elements.popupDeleteButton.addEventListener("click", deletePopupValue);
 elements.popupSaveButton.addEventListener("click", savePopupValue);
 window.addEventListener("keydown", handleWindowKeyDown);
 
@@ -161,6 +163,17 @@ function savePopupValue() {
   persistAllocations();
   closePopup();
   renderAll();
+}
+
+function deletePopupValue() {
+  if (!state.popupStockId) {
+    return;
+  }
+
+  state.popupInputValue = state.popupInputValue.length > 1
+    ? state.popupInputValue.slice(0, -1)
+    : "0";
+  syncPopupSummary();
 }
 
 function closePopup() {

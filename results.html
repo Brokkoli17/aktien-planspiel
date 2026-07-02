@@ -52,15 +52,26 @@
             </div>
           </div>
 
-          <section class="card result-breakdown-card">
-            <div class="results-header">
-              <div>
-                <p class="variant-label">Gekaufte Aktien</p>
-                <h2>Gewinn / Verlust je Aktie</h2>
-              </div>
+          <div class="results-header results-subheader">
+            <div>
+              <p class="variant-label">Gekaufte Aktien</p>
+              <h2>Gewinn / Verlust je Aktie</h2>
             </div>
-            <div id="portfolio-breakdown" class="portfolio-breakdown"></div>
-          </section>
+          </div>
+          <div class="results-table-wrap">
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Aktie</th>
+                  <th>Stück</th>
+                  <th>Kauf</th>
+                  <th>Wert 2022</th>
+                  <th>Gewinn / Verlust</th>
+                </tr>
+              </thead>
+              <tbody id="portfolio-breakdown"></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>

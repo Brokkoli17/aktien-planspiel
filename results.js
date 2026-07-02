@@ -116,15 +116,15 @@ function renderBreakdown(positions) {
       const rate = position.amount === 0 ? 0 : profit / position.amount;
 
       return `
-        <div class="breakdown-row result-breakdown-row">
-          <strong>${escapeHtml(position.name)}</strong>
-          <span>${integerFormatter.format(position.shares)} Stück</span>
-          <span>${formatCurrency(position.amount)}</span>
-          <span>${formatCurrency(position.comparisonValue)}</span>
-          <strong class="${profit >= 0 ? "positive" : "negative"}">
-            ${formatCurrency(profit)} (${percentFormatter.format(rate)})
-          </strong>
-        </div>
+        <tr>
+          <td><strong>${escapeHtml(position.name)}</strong></td>
+          <td>${integerFormatter.format(position.shares)}</td>
+          <td>${formatCurrency(position.amount)}</td>
+          <td>${formatCurrency(position.comparisonValue)}</td>
+          <td class="${profit >= 0 ? "positive" : "negative"}">
+            <strong>${formatCurrency(profit)}</strong> (${percentFormatter.format(rate)})
+          </td>
+        </tr>
       `;
     })
     .join("");

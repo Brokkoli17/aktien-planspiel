@@ -276,6 +276,20 @@ button {
   width: 100%;
 }
 
+.editor-popup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.editor-popup-actions .danger-button {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.editor-popup-actions #popup-save-button {
+  flex: 1 1 auto;
+}
+
 .results-empty {
   color: var(--muted);
   padding: 10px 0 2px;
@@ -416,6 +430,43 @@ button {
 
 .negative {
   color: var(--danger);
+}
+
+.results-subheader {
+  margin-top: 18px;
+}
+
+.results-table-wrap {
+  overflow-x: auto;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.results-table th,
+.results-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.results-table th {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #fcfaf7;
+}
+
+.results-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .dashboard-columns {
@@ -594,5 +645,11 @@ button {
 
   .editor-popup-pad button {
     min-height: 44px;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 10px 8px;
+    font-size: 0.85rem;
   }
 }
