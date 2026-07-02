@@ -107,6 +107,14 @@ h2 {
   line-height: 1.5;
 }
 
+.version-badge {
+  margin: 0 0 12px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--accent-strong);
+  letter-spacing: 0.08em;
+}
+
 button,
 .back-link {
   font: inherit;
