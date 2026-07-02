@@ -129,6 +129,10 @@ async function resetDashboard() {
   }
 }
 
+function formatCurrency(value) {
+  return currencyFormatter.format(value);
+}
+
 function getPriceForYear(stock, year) {
   return stock.prices[year] ?? stock.prices["2025"] ?? stock.startPrice ?? 0;
 }
