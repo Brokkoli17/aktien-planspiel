@@ -8,12 +8,15 @@ const STORAGE_KEYS = {
 
 clearLegacyStorage();
 
-const params = new URLSearchParams(window.location.search);
-const selectedYear = params.get("year") === "2025" ? "2025" : "2022";
+const selectedYear = "2022";
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
   style: "currency",
   currency: "EUR"
+});
+
+const integerFormatter = new Intl.NumberFormat("de-DE", {
+  maximumFractionDigits: 0
 });
 
 const percentFormatter = new Intl.NumberFormat("de-DE", {
@@ -24,14 +27,14 @@ const percentFormatter = new Intl.NumberFormat("de-DE", {
 
 const elements = {
   resultYear: document.querySelector("#result-year"),
-  resultInvested: document.querySelector("#result-invested"),
+  resultDepotValue: document.querySelector("#result-depot-value"),
   resultHeadline: document.querySelector("#result-headline"),
   resultsEmpty: document.querySelector("#results-empty"),
   resultsContent: document.querySelector("#results-content"),
   chartValueLabel: document.querySelector("#chart-value-label"),
   chartReturnLabel: document.querySelector("#chart-return-label"),
-  syncStatus: document.querySelector("#sync-status"),
-  summaryBars: document.querySelector("#summary-bars")
+  summaryBars: document.querySelector("#summary-bars"),
+  portfolioBreakdown: document.querySelector("#portfolio-breakdown")
 };
 
 renderResultsPage();
@@ -39,7 +42,6 @@ renderResultsPage();
 async function renderResultsPage() {
   const allocations = loadAllocations();
   const positions = getSelectedPositions(allocations, selectedYear);
-  const comparison = STOCK_APP_DATA.comparisons[selectedYear];
 
   elements.resultYear.textContent = selectedYear;
 
@@ -50,44 +52,39 @@ async function renderResultsPage() {
   }
 
   const totalInvested = positions.reduce((sum, position) => sum + position.amount, 0);
-  const totalValue = positions.reduce((sum, position) => sum + position.comparisonValue, 0);
-  const profit = totalValue - totalInvested;
-  const returnRate = totalInvested === 0 ? 0 : profit / totalInvested;
+  const totalStockValue = positions.reduce((sum, position) => sum + position.comparisonValue, 0);
+  const cashLeft = STOCK_APP_DATA.startBudget - totalInvested;
+  const depotValue = cashLeft + totalStockValue;
+  const profit = depotValue - STOCK_APP_DATA.startBudget;
+  const returnRate = profit / STOCK_APP_DATA.startBudget;
 
-  elements.resultInvested.textContent = formatCurrency(totalInvested);
-  elements.resultHeadline.textContent = `Gewinn / Verlust ${comparison.label}`;
-  renderSummaryBars(totalInvested, totalValue);
+  elements.resultDepotValue.textContent = formatCurrency(depotValue);
+  elements.resultHeadline.textContent = "Gewinn / Verlust 2022";
+
+  renderSummaryBars(depotValue);
   renderResultSummary(profit, returnRate);
+  renderBreakdown(positions);
 
   await submitResult({
     participantId: getParticipantId(),
     year: selectedYear,
     invested: totalInvested,
-    totalValue,
+    totalValue: depotValue,
     profit,
     returnRate
   });
 }
 
-function renderSummaryBars(totalInvested, totalValue) {
-  const maxValue = Math.max(totalInvested, totalValue, 1);
-  const investedWidth = Math.max(6, Math.round((totalInvested / maxValue) * 100));
-  const valueWidth = Math.max(6, Math.round((totalValue / maxValue) * 100));
+function renderSummaryBars(depotValue) {
+  const width = Math.max(6, Math.round((depotValue / STOCK_APP_DATA.startBudget) * 100));
 
   elements.summaryBars.innerHTML = `
     <div class="summary-bar-row">
-      <span class="summary-bar-label">Investiert</span>
-      <div class="summary-bar-wrap">
-        <div class="summary-bar summary-bar-invested" style="width:${investedWidth}%"></div>
-      </div>
-      <strong>${formatCurrency(totalInvested)}</strong>
-    </div>
-    <div class="summary-bar-row">
       <span class="summary-bar-label">Depotwert</span>
       <div class="summary-bar-wrap">
-        <div class="summary-bar summary-bar-value" style="width:${valueWidth}%"></div>
+        <div class="summary-bar summary-bar-value" style="width:${Math.min(width, 100)}%"></div>
       </div>
-      <strong>${formatCurrency(totalValue)}</strong>
+      <strong>${formatCurrency(depotValue)}</strong>
     </div>
   `;
 }
@@ -99,15 +96,45 @@ function renderResultSummary(profit, returnRate) {
   elements.chartReturnLabel.className = profit >= 0 ? "positive" : "negative";
 }
 
+function renderBreakdown(positions) {
+  elements.portfolioBreakdown.innerHTML = positions
+    .map((position) => {
+      const profit = position.comparisonValue - position.amount;
+      const rate = position.amount === 0 ? 0 : profit / position.amount;
+
+      return `
+        <div class="breakdown-row result-breakdown-row">
+          <strong>${escapeHtml(position.name)}</strong>
+          <span>${integerFormatter.format(position.shares)} Stück</span>
+          <span>${formatCurrency(position.amount)}</span>
+          <span>${formatCurrency(position.comparisonValue)}</span>
+          <strong class="${profit >= 0 ? "positive" : "negative"}">
+            ${formatCurrency(profit)} (${percentFormatter.format(rate)})
+          </strong>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function getSelectedPositions(allocations, year) {
   return STOCK_APP_DATA.stocks
     .filter((stock) => stock.startPrice && (allocations[stock.id] ?? 0) > 0)
     .map((stock) => {
       const shares = allocations[stock.id];
       const amount = shares * stock.startPrice;
-      const comparisonValue = shares * stock.prices[year];
-      return { amount, comparisonValue };
+      const comparisonValue = shares * getPriceForYear(stock, year);
+      return {
+        name: stock.name,
+        shares,
+        amount,
+        comparisonValue
+      };
     });
+}
+
+function getPriceForYear(stock, year) {
+  return stock.prices[year] ?? stock.prices["2025"] ?? stock.startPrice ?? 0;
 }
 
 function loadAllocations() {
@@ -135,28 +162,18 @@ function getParticipantId() {
 async function submitResult(payload) {
   const collectorUrl = getCollectorUrl();
   if (!collectorUrl) {
-    elements.syncStatus.textContent = "Sammelserver ist gerade nicht verbunden.";
     return;
   }
 
   try {
-    const response = await fetch(`${collectorUrl}/api/submissions`, {
+    await fetch(`${collectorUrl}/api/submissions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(payload)
     });
-
-    if (!response.ok) {
-      throw new Error("submit failed");
-    }
-
-    elements.syncStatus.textContent =
-      `Automatisch uebertragen: ${payload.participantId}`;
   } catch {
-    elements.syncStatus.textContent =
-      "Automatische Uebertragung fehlgeschlagen.";
   }
 }
 
@@ -196,4 +213,13 @@ function sanitizeShareCount(value) {
     return 0;
   }
   return Math.round(value);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }

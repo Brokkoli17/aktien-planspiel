@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aktien-Planspiel</title>
+    <title>Dax-Planspiel</title>
     <meta
       name="description"
-      content="Einfache Abstimmungsseite fuer ein Aktien-Planspiel mit 10.000 Euro Budget."
+      content="Einfache Abstimmungsseite fuer ein Dax-Planspiel mit 10.000 Euro Budget."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -15,7 +15,7 @@
       <div class="topbar-inner">
         <div>
           <p class="topbar-label">Aktien-Planspiel</p>
-          <h1>10.000 Euro verteilen</h1>
+          <h1>Dax-Planspiel</h1>
         </div>
         <div class="budget-box">
           <div class="budget-line">
@@ -39,8 +39,12 @@
 
     <main class="page">
       <section class="intro card">
-        <p class="version-badge">v7</p>
-        <p>Tippe auf die Stueckzahl, um das Numpad als kleines Popup zu oeffnen.</p>
+        <p class="variant-label">Anleitung</p>
+        <p>
+          Waehle mit 10.000 Euro ganze Aktien aus. Tippe rechts auf die Stueckzahl,
+          gib die Anzahl im Popup ein und oeffne danach deine persoenliche Auswertung mit
+          <strong>Depot 2022</strong>.
+        </p>
       </section>
 
       <section class="variant card">
@@ -56,10 +60,7 @@
       <section class="actions card">
         <p class="variant-label">Auswertung</p>
         <div class="action-buttons">
-          <button id="evaluate-2022-button" type="button">Depotvergleich 2022</button>
-          <button id="evaluate-2025-button" type="button" class="secondary-button">
-            Depotvergleich 2025
-          </button>
+          <button id="evaluate-2022-button" type="button">Depot 2022</button>
         </div>
       </section>
     </main>

@@ -15,13 +15,15 @@ const elements = {
   dashboardStatus: document.querySelector("#dashboard-status"),
   chartEmpty: document.querySelector("#chart-empty"),
   chartArea: document.querySelector("#chart-area"),
+  stockChartArea: document.querySelector("#stock-chart-area"),
+  stockChartTitle: document.querySelector("#stock-chart-title"),
   year2022Button: document.querySelector("#dashboard-2022-button"),
-  year2025Button: document.querySelector("#dashboard-2025-button"),
+  year2026Button: document.querySelector("#dashboard-2026-button"),
   resetButton: document.querySelector("#dashboard-reset-button")
 };
 
 elements.year2022Button.addEventListener("click", () => setYear("2022"));
-elements.year2025Button.addEventListener("click", () => setYear("2025"));
+elements.year2026Button.addEventListener("click", () => setYear("2026"));
 elements.resetButton.addEventListener("click", resetDashboard);
 
 setYear("2022");
@@ -30,7 +32,9 @@ state.pollHandle = window.setInterval(loadDashboard, 2000);
 function setYear(year) {
   state.year = year;
   elements.dashboardYear.textContent = year;
+  elements.stockChartTitle.textContent = `Gewinn / Verlust der Aktien ${year}`;
   loadDashboard();
+  renderStockChart();
 }
 
 async function loadDashboard() {
@@ -46,37 +50,42 @@ async function loadDashboard() {
       `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE")}`;
 
     elements.chartEmpty.classList.toggle("hidden", filtered.length > 0);
-    renderChart(filtered);
+    renderParticipantChart(filtered);
   } catch {
     elements.dashboardStatus.textContent = "Dashboard konnte nicht geladen werden.";
-    renderChart([]);
+    renderParticipantChart([]);
   }
 }
 
-function renderChart(submissions) {
+function renderParticipantChart(submissions) {
   if (!submissions.length) {
-    elements.chartArea.innerHTML = `
-      <div class="dashboard-columns dashboard-columns-empty">
-        <div class="dashboard-y-axis">
-          <span>10</span>
-          <span>0</span>
-          <span>-10</span>
-        </div>
-        <div class="dashboard-plot">
-          <div class="dashboard-grid-line dashboard-grid-line-top"></div>
-          <div class="dashboard-grid-line dashboard-grid-line-middle"></div>
-          <div class="dashboard-grid-line dashboard-grid-line-bottom"></div>
-          <div class="dashboard-placeholder">Noch keine Ergebnisse vorhanden</div>
-        </div>
-      </div>
-    `;
+    elements.chartArea.innerHTML = renderColumnChartShell([], 10, true);
     return;
   }
 
   const maxAbsProfit = Math.max(...submissions.map((item) => Math.abs(item.profit)), 1);
+  const columns = submissions.map((item) => renderColumn(item.profit, maxAbsProfit));
+  elements.chartArea.innerHTML = renderColumnChartShell(columns, maxAbsProfit, false);
+}
 
-  elements.chartArea.innerHTML = `
-    <div class="dashboard-columns">
+function renderStockChart() {
+  const entries = STOCK_APP_DATA.stocks
+    .filter((stock) => stock.startPrice)
+    .map((stock) => {
+      const comparisonPrice = getPriceForYear(stock, state.year);
+      return {
+        profit: comparisonPrice - stock.startPrice
+      };
+    });
+
+  const maxAbsProfit = Math.max(...entries.map((item) => Math.abs(item.profit)), 1);
+  const columns = entries.map((item) => renderColumn(item.profit, maxAbsProfit));
+  elements.stockChartArea.innerHTML = renderColumnChartShell(columns, maxAbsProfit, false);
+}
+
+function renderColumnChartShell(columns, maxAbsProfit, empty) {
+  return `
+    <div class="dashboard-columns ${empty ? "dashboard-columns-empty" : ""}">
       <div class="dashboard-y-axis">
         <span>${formatAxisValue(maxAbsProfit)}</span>
         <span>0</span>
@@ -86,30 +95,25 @@ function renderChart(submissions) {
         <div class="dashboard-grid-line dashboard-grid-line-top"></div>
         <div class="dashboard-grid-line dashboard-grid-line-middle"></div>
         <div class="dashboard-grid-line dashboard-grid-line-bottom"></div>
-        <div class="dashboard-columns-list">
-          ${submissions.map((item) => renderColumn(item, maxAbsProfit)).join("")}
-        </div>
+        ${
+          empty
+            ? '<div class="dashboard-placeholder">Noch keine Ergebnisse vorhanden</div>'
+            : `<div class="dashboard-columns-list">${columns.join("")}</div>`
+        }
       </div>
     </div>
   `;
 }
 
-function renderColumn(item, maxAbsProfit) {
-  const percent = Math.max(8, Math.round((Math.abs(item.profit) / maxAbsProfit) * 50));
-  const colorClass = item.profit >= 0
-    ? "dashboard-column-bar-positive"
-    : "dashboard-column-bar-negative";
-  const directionClass = item.profit >= 0
-    ? "dashboard-column-bar-up"
-    : "dashboard-column-bar-down";
+function renderColumn(profit, maxAbsProfit) {
+  const percent = Math.max(8, Math.round((Math.abs(profit) / maxAbsProfit) * 50));
+  const colorClass = profit >= 0 ? "dashboard-column-bar-positive" : "dashboard-column-bar-negative";
+  const directionClass = profit >= 0 ? "dashboard-column-bar-up" : "dashboard-column-bar-down";
 
   return `
-    <div class="dashboard-column-item" title="${formatCurrency(item.profit)}">
+    <div class="dashboard-column-item" title="${formatCurrency(profit)}">
       <div class="dashboard-column-slot">
-        <div
-          class="dashboard-column-bar ${colorClass} ${directionClass}"
-          style="height:${percent}%"
-        ></div>
+        <div class="dashboard-column-bar ${colorClass} ${directionClass}" style="height:${percent}%"></div>
       </div>
     </div>
   `;
@@ -125,8 +129,8 @@ async function resetDashboard() {
   }
 }
 
-function formatCurrency(value) {
-  return currencyFormatter.format(value);
+function getPriceForYear(stock, year) {
+  return stock.prices[year] ?? stock.prices["2025"] ?? stock.startPrice ?? 0;
 }
 
 function formatAxisValue(value) {

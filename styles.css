@@ -468,6 +468,7 @@ button {
 
 .dashboard-grid-line-middle {
   top: 50%;
+  border-top: 2px solid #b9aa97;
 }
 
 .dashboard-grid-line-bottom {
@@ -479,14 +480,14 @@ button {
   inset: 10px 12px 0;
   display: flex;
   align-items: stretch;
-  justify-content: space-evenly;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 2px;
 }
 
 .dashboard-column-item {
   flex: 1 1 0;
-  max-width: 42px;
-  min-width: 14px;
+  max-width: none;
+  min-width: 8px;
   height: 100%;
   display: flex;
   align-items: stretch;
@@ -502,7 +503,8 @@ button {
   position: absolute;
   left: 0;
   width: 100%;
-  border: 1px solid #b85c00;
+  border-left: 1px solid #b85c00;
+  border-right: 1px solid #b85c00;
   background: #ff7a00;
 }
 
@@ -516,12 +518,14 @@ button {
 
 .dashboard-column-bar-up {
   bottom: 50%;
-  border-radius: 3px 3px 0 0;
+  border-top: 1px solid #b85c00;
+  border-radius: 2px 2px 0 0;
 }
 
 .dashboard-column-bar-down {
   top: 50%;
-  border-radius: 0 0 3px 3px;
+  border-bottom: 1px solid #b85c00;
+  border-radius: 0 0 2px 2px;
 }
 
 .dashboard-placeholder {

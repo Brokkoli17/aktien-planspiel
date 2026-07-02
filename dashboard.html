@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aktien-Planspiel Dashboard</title>
+    <title>Dax-Planspiel Dashboard</title>
     <meta
       name="description"
       content="Dashboard fuer automatisch uebertragene Gewinne und Verluste."
@@ -35,7 +35,7 @@
         <p class="variant-label">Steuerung</p>
         <div class="action-buttons">
           <button id="dashboard-2022-button" type="button" class="secondary-button">2022</button>
-          <button id="dashboard-2025-button" type="button" class="secondary-button">2025</button>
+          <button id="dashboard-2026-button" type="button" class="secondary-button">2026</button>
           <button id="dashboard-reset-button" type="button" class="danger-button">Alle Ergebnisse loeschen</button>
         </div>
         <p id="dashboard-status" class="sync-status"></p>
@@ -44,8 +44,8 @@
       <section class="results card">
         <div class="results-header">
           <div>
-            <p class="variant-label">Saeulendiagramm</p>
-            <h2>Gewinn / Verlust der Teilnehmer</h2>
+            <p class="variant-label">Teilnehmer</p>
+            <h2>Gewinn / Verlust</h2>
           </div>
         </div>
         <div id="chart-empty" class="results-empty hidden">
@@ -53,9 +53,20 @@
         </div>
         <div id="chart-area" class="chart-area"></div>
       </section>
+
+      <section class="results card">
+        <div class="results-header">
+          <div>
+            <p class="variant-label">Aktienwerte</p>
+            <h2 id="stock-chart-title">Gewinn / Verlust der Aktien 2022</h2>
+          </div>
+        </div>
+        <div id="stock-chart-area" class="chart-area"></div>
+      </section>
     </main>
 
     <script src="config.js"></script>
+    <script src="data.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

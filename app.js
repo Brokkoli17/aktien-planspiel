@@ -29,7 +29,6 @@ const elements = {
   remainingBudget: document.querySelector("#remaining-budget"),
   budgetProgress: document.querySelector("#budget-progress"),
   evaluate2022Button: document.querySelector("#evaluate-2022-button"),
-  evaluate2025Button: document.querySelector("#evaluate-2025-button"),
   stocksList: document.querySelector("#stocks-slider"),
   editorPopup: document.querySelector("#editor-popup"),
   popupBackdrop: document.querySelector("#popup-backdrop"),
@@ -46,7 +45,6 @@ const elements = {
 elements.startBudget.textContent = formatCurrency(STOCK_APP_DATA.startBudget);
 
 elements.evaluate2022Button.addEventListener("click", () => openResultsPage("2022"));
-elements.evaluate2025Button.addEventListener("click", () => openResultsPage("2025"));
 elements.popupBackdrop.addEventListener("click", closePopup);
 elements.popupPad.addEventListener("click", handleNumpadClick);
 elements.popupCancelButton.addEventListener("click", closePopup);

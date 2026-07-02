@@ -3,11 +3,11 @@ const STOCK_APP_DATA = {
   baseDate: "01.07.2021",
   comparisons: {
     "2022": { label: "30.12.2022" },
-    "2025": { label: "30.12.2025" }
+    "2026": { label: "2026" }
   },
   notes: [
     "Startkurse aus den vom Nutzer bereitgestellten Fotos.",
-    "2025-Kurse sind hinterlegt.",
+    "2026-Kurse sind auf Basis der bisher hinterlegten Spaetwerte vorbereitet.",
     "2022 ist als vorbereitete Jahresauswertung eingebaut. Die 2022-Kurse koennen bei Bedarf in data.js noch durch exakte historische Werte ersetzt werden."
   ],
   stocks: [

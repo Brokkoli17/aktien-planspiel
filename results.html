@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aktien-Planspiel Auswertung</title>
+    <title>Depot 2022</title>
     <meta
       name="description"
-      content="Diagramm-Auswertung des Aktien-Planspiels fuer ein ausgewaehltes Jahr."
+      content="Persoenliche Depot-Auswertung fuer das Dax-Planspiel."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -14,8 +14,8 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div>
-          <p class="topbar-label">Aktien-Planspiel</p>
-          <h1>Depotvergleich</h1>
+          <p class="topbar-label">Dax-Planspiel</p>
+          <h1>Depot 2022</h1>
         </div>
         <div class="budget-box result-budget-box">
           <div class="budget-line">
@@ -23,8 +23,8 @@
             <strong id="result-year">2022</strong>
           </div>
           <div class="budget-line">
-            <span>Investiert</span>
-            <strong id="result-invested">0,00 €</strong>
+            <span>Depotwert</span>
+            <strong id="result-depot-value">10.000,00 €</strong>
           </div>
         </div>
       </div>
@@ -34,12 +34,10 @@
       <section class="results card">
         <div class="results-header">
           <div>
-            <p class="variant-label">Diagramm</p>
+            <p class="variant-label">Auswertung</p>
             <h2 id="result-headline">Gewinn / Verlust</h2>
           </div>
-          <a class="back-link" href="index.html">Zurueck zur Auswahl</a>
         </div>
-        <p id="sync-status" class="sync-status"></p>
 
         <div id="results-empty" class="results-empty hidden">
           Noch keine Auswahl vorhanden. Bitte zuerst Aktien auswaehlen.
@@ -53,6 +51,16 @@
               <span id="chart-return-label">0,00 %</span>
             </div>
           </div>
+
+          <section class="card result-breakdown-card">
+            <div class="results-header">
+              <div>
+                <p class="variant-label">Gekaufte Aktien</p>
+                <h2>Gewinn / Verlust je Aktie</h2>
+              </div>
+            </div>
+            <div id="portfolio-breakdown" class="portfolio-breakdown"></div>
+          </section>
         </div>
       </section>
     </main>
