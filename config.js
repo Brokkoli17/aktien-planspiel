@@ -1,4 +1,4 @@
 window.STOCK_APP_CONFIG = {
-  collectorUrl: "https://furnishings-differently-witness-billion.trycloudflare.com",
+  collectorUrl: "https://believe-empty-bird-fees.trycloudflare.com",
   storageVersion: "stock-game-v4"
 };
