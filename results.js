@@ -28,13 +28,10 @@ const elements = {
   resultHeadline: document.querySelector("#result-headline"),
   resultsEmpty: document.querySelector("#results-empty"),
   resultsContent: document.querySelector("#results-content"),
-  chartMaxLabel: document.querySelector("#chart-max-label"),
-  chartMinLabel: document.querySelector("#chart-min-label"),
   chartValueLabel: document.querySelector("#chart-value-label"),
   chartReturnLabel: document.querySelector("#chart-return-label"),
-  singleResultBar: document.querySelector("#single-result-bar"),
   syncStatus: document.querySelector("#sync-status"),
-  detailChart: document.querySelector("#detail-chart")
+  summaryBars: document.querySelector("#summary-bars")
 };
 
 renderResultsPage();
@@ -59,8 +56,8 @@ async function renderResultsPage() {
 
   elements.resultInvested.textContent = formatCurrency(totalInvested);
   elements.resultHeadline.textContent = `Gewinn / Verlust ${comparison.label}`;
-  renderSingleChart(profit, returnRate);
-  renderDetailChart(positions);
+  renderSummaryBars(totalInvested, totalValue);
+  renderResultSummary(profit, returnRate);
 
   await submitResult({
     participantId: getParticipantId(),
@@ -72,45 +69,34 @@ async function renderResultsPage() {
   });
 }
 
-function renderSingleChart(profit, returnRate) {
-  const maxRange = Math.max(Math.abs(profit), 1);
-  const directionClass = profit >= 0 ? "single-result-bar-positive" : "single-result-bar-negative";
-  const heightPercent = Math.max(6, Math.min(100, (Math.abs(profit) / maxRange) * 100));
+function renderSummaryBars(totalInvested, totalValue) {
+  const maxValue = Math.max(totalInvested, totalValue, 1);
+  const investedWidth = Math.max(6, Math.round((totalInvested / maxValue) * 100));
+  const valueWidth = Math.max(6, Math.round((totalValue / maxValue) * 100));
 
-  elements.chartMaxLabel.textContent = formatCurrency(maxRange);
-  elements.chartMinLabel.textContent = formatCurrency(-maxRange);
+  elements.summaryBars.innerHTML = `
+    <div class="summary-bar-row">
+      <span class="summary-bar-label">Investiert</span>
+      <div class="summary-bar-wrap">
+        <div class="summary-bar summary-bar-invested" style="width:${investedWidth}%"></div>
+      </div>
+      <strong>${formatCurrency(totalInvested)}</strong>
+    </div>
+    <div class="summary-bar-row">
+      <span class="summary-bar-label">Depotwert</span>
+      <div class="summary-bar-wrap">
+        <div class="summary-bar summary-bar-value" style="width:${valueWidth}%"></div>
+      </div>
+      <strong>${formatCurrency(totalValue)}</strong>
+    </div>
+  `;
+}
+
+function renderResultSummary(profit, returnRate) {
   elements.chartValueLabel.textContent = formatCurrency(profit);
   elements.chartReturnLabel.textContent = percentFormatter.format(returnRate);
   elements.chartValueLabel.className = profit >= 0 ? "positive" : "negative";
   elements.chartReturnLabel.className = profit >= 0 ? "positive" : "negative";
-  elements.singleResultBar.className = `single-result-bar ${directionClass}`;
-  elements.singleResultBar.style.height = `${heightPercent}%`;
-  elements.singleResultBar.style.alignSelf = profit >= 0 ? "end" : "start";
-}
-
-function renderDetailChart(positions) {
-  const entries = positions.map((position) => ({
-    name: position.name,
-    change: position.comparisonValue - position.amount
-  }));
-  const maxChange = Math.max(...entries.map((entry) => Math.abs(entry.change)), 1);
-
-  elements.detailChart.innerHTML = entries
-    .sort((left, right) => right.change - left.change)
-    .map((entry) => {
-      const width = Math.max(4, Math.round((Math.abs(entry.change) / maxChange) * 100));
-      const directionClass = entry.change >= 0 ? "chart-bar-positive" : "chart-bar-negative";
-      return `
-        <div class="chart-row">
-          <span class="chart-label">${escapeHtml(entry.name)}</span>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar ${directionClass}" style="width:${width}%"></div>
-          </div>
-          <strong class="${entry.change >= 0 ? "positive" : "negative"}">${formatCurrency(entry.change)}</strong>
-        </div>
-      `;
-    })
-    .join("");
 }
 
 function getSelectedPositions(allocations, year) {
@@ -210,13 +196,4 @@ function sanitizeShareCount(value) {
     return 0;
   }
   return Math.round(value);
-}
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

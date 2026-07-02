@@ -9,7 +9,8 @@ const STORAGE_KEYS = {
 clearLegacyStorage();
 
 const state = {
-  allocations: loadAllocations()
+  allocations: loadAllocations(),
+  dragStockId: null
 };
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
@@ -52,9 +53,8 @@ function renderSliderList() {
   const stocks = STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
   elements.sliderList.innerHTML = stocks.map((stock) => renderSliderRow(stock)).join("");
 
-  document.querySelectorAll("[data-stock-id]").forEach((input) => {
-    input.addEventListener("input", handleSliderInput);
-    input.addEventListener("change", handleSliderInput);
+  document.querySelectorAll("[data-drag-stock-id]").forEach((card) => {
+    card.addEventListener("pointerdown", handleRowPointerDown);
   });
 }
 
@@ -65,30 +65,57 @@ function renderSliderRow(stock) {
 
   return `
     <div class="stock-row">
-      <label class="row-slider-card" style="--row-fill:${fill}%">
-        <input
-          class="row-slider-input"
-          type="range"
-          min="0"
-          max="${maxShares}"
-          step="1"
-          value="${Math.min(shares, maxShares)}"
-          data-stock-id="${stock.id}"
-        />
+      <div
+        class="row-slider-card"
+        style="--row-fill:${fill}%"
+        data-drag-stock-id="${stock.id}"
+        data-max-shares="${maxShares}"
+      >
         <span class="row-name">${escapeHtml(stock.name)}</span>
         <span class="row-symbol">${escapeHtml(stock.symbol)}</span>
         <span class="row-price">${formatCurrency(stock.startPrice)}</span>
         <span class="row-shares">${integerFormatter.format(shares)}</span>
-      </label>
+      </div>
     </div>
   `;
 }
 
-function handleSliderInput(event) {
-  const stockId = event.target.dataset.stockId;
+function handleRowPointerDown(event) {
+  state.dragStockId = event.currentTarget.dataset.dragStockId;
+  updateSharesFromPointer(event);
+  window.addEventListener("pointermove", handleWindowPointerMove);
+  window.addEventListener("pointerup", handleWindowPointerUp);
+}
+
+function handleWindowPointerMove(event) {
+  if (!state.dragStockId) {
+    return;
+  }
+
+  updateSharesFromPointer(event);
+}
+
+function handleWindowPointerUp() {
+  state.dragStockId = null;
+  window.removeEventListener("pointermove", handleWindowPointerMove);
+  window.removeEventListener("pointerup", handleWindowPointerUp);
+}
+
+function updateSharesFromPointer(event) {
+  const stockId = state.dragStockId;
+  const card = document.querySelector(`[data-drag-stock-id="${stockId}"]`);
+
+  if (!card) {
+    return;
+  }
+
+  const rect = card.getBoundingClientRect();
+  const pointerX = Math.min(Math.max(event.clientX, rect.left), rect.right);
+  const ratio = rect.width <= 0 ? 0 : (pointerX - rect.left) / rect.width;
+  const visualMaxShares = Number(card.dataset.maxShares || 0);
+  const requestedShares = sanitizeShareCount(ratio * visualMaxShares);
   const stock = STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
   const currentShares = state.allocations[stockId] ?? 0;
-  const requestedShares = sanitizeShareCount(Number(event.target.value));
   const investedWithoutCurrent = getTotalAllocated() - currentShares * stock.startPrice;
   const availableBudget = STOCK_APP_DATA.startBudget - investedWithoutCurrent;
   const maxAllowedShares = Math.floor(availableBudget / stock.startPrice);
