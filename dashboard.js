@@ -138,6 +138,10 @@ function formatAxisValue(value) {
 }
 
 function getCollectorUrl() {
+  if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
+    return window.location.origin;
+  }
+
   if (typeof appConfig.collectorUrl === "string" && appConfig.collectorUrl.trim()) {
     return appConfig.collectorUrl.replace(/\/$/, "");
   }
