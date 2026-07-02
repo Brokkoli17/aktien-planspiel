@@ -1,3 +1,4 @@
+const appConfig = window.STOCK_APP_CONFIG || {};
 const state = {
   year: "2022",
   pollHandle: null
@@ -34,7 +35,7 @@ function setYear(year) {
 
 async function loadDashboard() {
   try {
-    const response = await fetch("/api/submissions");
+    const response = await fetch(`${getCollectorUrl()}/api/submissions`);
     const submissions = await response.json();
     const filtered = submissions
       .filter((item) => item.year === state.year)
@@ -78,7 +79,7 @@ function renderChart(submissions) {
 
 async function resetDashboard() {
   try {
-    await fetch("/api/submissions/reset", { method: "POST" });
+    await fetch(`${getCollectorUrl()}/api/submissions/reset`, { method: "POST" });
     await loadDashboard();
     elements.dashboardStatus.textContent = "Alle bisherigen Ergebnisse wurden geloescht.";
   } catch {
@@ -88,4 +89,12 @@ async function resetDashboard() {
 
 function formatCurrency(value) {
   return currencyFormatter.format(value);
+}
+
+function getCollectorUrl() {
+  if (typeof appConfig.collectorUrl === "string" && appConfig.collectorUrl.trim()) {
+    return appConfig.collectorUrl.replace(/\/$/, "");
+  }
+
+  return window.location.origin;
 }
