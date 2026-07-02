@@ -39,10 +39,8 @@
 
     <main class="page">
       <section class="intro card">
-        <p class="version-badge">v6</p>
-        <p>
-          Druecke eine Aktie laenger, um die Stueckzahl im Vollbild-Menue zu waehlen.
-        </p>
+        <p class="version-badge">v7</p>
+        <p>Tippe auf die Stueckzahl, um das Numpad als kleines Popup zu oeffnen.</p>
       </section>
 
       <section class="variant card">
@@ -66,69 +64,50 @@
       </section>
     </main>
 
-    <div id="stock-modal" class="modal hidden" aria-hidden="true">
-      <div id="modal-backdrop" class="modal-backdrop"></div>
-      <section
-        class="modal-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-stock-name"
-      >
-        <div class="modal-header">
+    <div id="editor-popup" class="editor-popup hidden">
+      <div id="popup-backdrop" class="editor-popup-backdrop"></div>
+      <section class="editor-popup-panel" role="dialog" aria-modal="true" aria-labelledby="popup-stock-name">
+        <div class="editor-popup-header">
           <div>
-            <p class="variant-label">Aktie bearbeiten</p>
-            <h2 id="modal-stock-name">Aktie</h2>
-            <p id="modal-stock-meta" class="modal-meta"></p>
+            <p class="variant-label">Stueckzahl</p>
+            <h2 id="popup-stock-name">Aktie</h2>
+            <p id="popup-stock-meta" class="editor-popup-meta"></p>
           </div>
-          <button id="modal-save-button" type="button" class="secondary-button">
-            Speichern
-          </button>
         </div>
 
-        <div class="modal-summary">
-          <div class="modal-summary-box">
+        <div class="editor-popup-summary">
+          <div class="editor-popup-box">
             <span>Stueckzahl</span>
-            <strong id="modal-shares-value">0</strong>
+            <strong id="popup-share-value">0</strong>
           </div>
-          <div class="modal-summary-box">
+          <div class="editor-popup-box">
             <span>Investiert</span>
-            <strong id="modal-invested-value">0,00 €</strong>
+            <strong id="popup-invested-value">0,00 €</strong>
           </div>
-          <div class="modal-summary-box">
+          <div class="editor-popup-box">
             <span>Maximal</span>
-            <strong id="modal-max-value">0</strong>
+            <strong id="popup-max-value">0</strong>
           </div>
         </div>
 
-        <div class="modal-slider-block">
-          <input
-            id="modal-slider"
-            class="modal-slider"
-            type="range"
-            min="0"
-            max="0"
-            step="1"
-            value="0"
-          />
+        <div id="popup-pad" class="editor-popup-pad">
+          <button type="button" data-numpad-key="1">1</button>
+          <button type="button" data-numpad-key="2">2</button>
+          <button type="button" data-numpad-key="3">3</button>
+          <button type="button" data-numpad-key="4">4</button>
+          <button type="button" data-numpad-key="5">5</button>
+          <button type="button" data-numpad-key="6">6</button>
+          <button type="button" data-numpad-key="7">7</button>
+          <button type="button" data-numpad-key="8">8</button>
+          <button type="button" data-numpad-key="9">9</button>
+          <button type="button" data-numpad-key="clear" class="secondary-button">C</button>
+          <button type="button" data-numpad-key="0">0</button>
+          <button type="button" data-numpad-key="backspace" class="secondary-button">←</button>
         </div>
 
-        <div class="modal-numpad">
-          <button type="button" data-key="1">1</button>
-          <button type="button" data-key="2">2</button>
-          <button type="button" data-key="3">3</button>
-          <button type="button" data-key="4">4</button>
-          <button type="button" data-key="5">5</button>
-          <button type="button" data-key="6">6</button>
-          <button type="button" data-key="7">7</button>
-          <button type="button" data-key="8">8</button>
-          <button type="button" data-key="9">9</button>
-          <button type="button" data-key="clear" class="secondary-button">C</button>
-          <button type="button" data-key="0">0</button>
-          <button type="button" data-key="backspace" class="secondary-button">←</button>
-        </div>
-
-        <div class="modal-actions">
-          <button id="modal-apply-button" type="button">Uebernehmen</button>
+        <div class="editor-popup-actions">
+          <button id="popup-cancel-button" type="button" class="secondary-button">Abbrechen</button>
+          <button id="popup-save-button" type="button">Speichern</button>
         </div>
       </section>
     </div>

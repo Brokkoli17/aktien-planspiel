@@ -10,12 +10,8 @@ clearLegacyStorage();
 
 const state = {
   allocations: loadAllocations(),
-  pressHandle: null,
-  pressStockId: null,
-  pressTriggered: false,
-  modalStockId: null,
-  modalDraftShares: 0,
-  modalInputValue: "0"
+  popupStockId: null,
+  popupInputValue: "0"
 };
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
@@ -34,222 +30,158 @@ const elements = {
   budgetProgress: document.querySelector("#budget-progress"),
   evaluate2022Button: document.querySelector("#evaluate-2022-button"),
   evaluate2025Button: document.querySelector("#evaluate-2025-button"),
-  sliderList: document.querySelector("#stocks-slider"),
-  stockModal: document.querySelector("#stock-modal"),
-  modalBackdrop: document.querySelector("#modal-backdrop"),
-  modalSaveButton: document.querySelector("#modal-save-button"),
-  modalStockName: document.querySelector("#modal-stock-name"),
-  modalStockMeta: document.querySelector("#modal-stock-meta"),
-  modalSharesValue: document.querySelector("#modal-shares-value"),
-  modalInvestedValue: document.querySelector("#modal-invested-value"),
-  modalMaxValue: document.querySelector("#modal-max-value"),
-  modalSlider: document.querySelector("#modal-slider"),
-  modalApplyButton: document.querySelector("#modal-apply-button"),
-  modalNumpad: document.querySelector(".modal-numpad")
+  stocksList: document.querySelector("#stocks-slider"),
+  editorPopup: document.querySelector("#editor-popup"),
+  popupBackdrop: document.querySelector("#popup-backdrop"),
+  popupStockName: document.querySelector("#popup-stock-name"),
+  popupStockMeta: document.querySelector("#popup-stock-meta"),
+  popupShareValue: document.querySelector("#popup-share-value"),
+  popupInvestedValue: document.querySelector("#popup-invested-value"),
+  popupMaxValue: document.querySelector("#popup-max-value"),
+  popupPad: document.querySelector("#popup-pad"),
+  popupCancelButton: document.querySelector("#popup-cancel-button"),
+  popupSaveButton: document.querySelector("#popup-save-button")
 };
 
 elements.startBudget.textContent = formatCurrency(STOCK_APP_DATA.startBudget);
 
-renderAll();
-
-elements.evaluate2022Button.addEventListener("click", () => {
-  openResultsPage("2022");
-});
-
-elements.evaluate2025Button.addEventListener("click", () => {
-  openResultsPage("2025");
-});
-
-elements.modalBackdrop.addEventListener("click", closeStockModal);
-elements.modalSaveButton.addEventListener("click", applyModalShares);
-elements.modalApplyButton.addEventListener("click", applyModalShares);
-elements.modalSlider.addEventListener("input", handleModalSliderInput);
-elements.modalNumpad.addEventListener("click", handleNumpadClick);
+elements.evaluate2022Button.addEventListener("click", () => openResultsPage("2022"));
+elements.evaluate2025Button.addEventListener("click", () => openResultsPage("2025"));
+elements.popupBackdrop.addEventListener("click", closePopup);
+elements.popupPad.addEventListener("click", handleNumpadClick);
+elements.popupCancelButton.addEventListener("click", closePopup);
+elements.popupSaveButton.addEventListener("click", savePopupValue);
 window.addEventListener("keydown", handleWindowKeyDown);
 
+renderAll();
+
 function renderAll() {
-  renderSliderList();
+  renderStocksList();
   updateBudgetSummary();
 }
 
-function renderSliderList() {
+function renderStocksList() {
   const stocks = STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
-  elements.sliderList.innerHTML = stocks.map((stock) => renderSliderRow(stock)).join("");
+  elements.stocksList.innerHTML = stocks.map((stock) => renderStockRow(stock)).join("");
 
-  document.querySelectorAll("[data-stock-id]").forEach((card) => {
-    card.addEventListener("pointerdown", handleRowPointerDown);
-    card.addEventListener("pointerup", clearLongPress);
-    card.addEventListener("pointerleave", clearLongPress);
-    card.addEventListener("pointercancel", clearLongPress);
-    card.addEventListener("dblclick", handleRowDoubleClick);
-    card.addEventListener("keydown", handleRowKeyDown);
-    card.addEventListener("contextmenu", handleRowContextMenu);
+  document.querySelectorAll("[data-open-popup]").forEach((button) => {
+    button.addEventListener("click", handleOpenPopupClick);
   });
 }
 
-function renderSliderRow(stock) {
+function renderStockRow(stock) {
   const shares = state.allocations[stock.id] ?? 0;
-  const maxShares = Math.floor(STOCK_APP_DATA.startBudget / stock.startPrice);
-  const fill = maxShares === 0 ? 0 : (shares / maxShares) * 100;
 
   return `
     <div class="stock-row">
-      <div
-        class="row-slider-card"
-        style="--row-fill:${fill}%"
-        data-stock-id="${stock.id}"
-        tabindex="0"
-        role="button"
-        aria-label="${escapeHtml(stock.name)} bearbeiten"
-      >
+      <div class="stock-line">
         <span class="row-name">${escapeHtml(stock.name)}</span>
         <span class="row-symbol">${escapeHtml(stock.symbol)}</span>
         <span class="row-price">${formatCurrency(stock.startPrice)}</span>
-        <span class="row-shares">${integerFormatter.format(shares)}</span>
+        <button
+          type="button"
+          class="row-shares row-shares-button"
+          data-open-popup="${stock.id}"
+          aria-label="${escapeHtml(stock.name)} Stückzahl bearbeiten"
+        >
+          ${integerFormatter.format(shares)}
+        </button>
       </div>
     </div>
   `;
 }
 
-function handleRowPointerDown(event) {
-  if (event.button !== undefined && event.button !== 0) {
-    return;
-  }
-
-  clearLongPress();
-  state.pressStockId = event.currentTarget.dataset.stockId;
-  state.pressTriggered = false;
-  state.pressHandle = window.setTimeout(() => {
-    state.pressTriggered = true;
-    openStockModal(state.pressStockId);
-  }, 350);
-}
-
-function handleRowDoubleClick(event) {
-  openStockModal(event.currentTarget.dataset.stockId);
-}
-
-function handleRowKeyDown(event) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    openStockModal(event.currentTarget.dataset.stockId);
-  }
-}
-
-function handleRowContextMenu(event) {
-  event.preventDefault();
-  openStockModal(event.currentTarget.dataset.stockId);
-}
-
-function clearLongPress() {
-  if (state.pressHandle) {
-    window.clearTimeout(state.pressHandle);
-  }
-
-  state.pressHandle = null;
-  state.pressStockId = null;
-}
-
-function openStockModal(stockId) {
-  clearLongPress();
+function handleOpenPopupClick(event) {
+  const stockId = event.currentTarget.dataset.openPopup;
   const stock = getStockById(stockId);
 
   if (!stock) {
     return;
   }
 
-  state.modalStockId = stockId;
-  state.modalDraftShares = state.allocations[stockId] ?? 0;
-  state.modalInputValue = String(state.modalDraftShares);
+  state.popupStockId = stockId;
+  state.popupInputValue = String(state.allocations[stockId] ?? 0);
 
-  elements.modalStockName.textContent = stock.name;
-  elements.modalStockMeta.textContent = `${stock.symbol} · Kurs 2021: ${formatCurrency(stock.startPrice)}`;
-  elements.stockModal.classList.remove("hidden");
-  elements.stockModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modal-open");
-
-  syncModalUi();
+  elements.popupStockName.textContent = stock.name;
+  elements.popupStockMeta.textContent = `${stock.symbol} · Kurs 2021: ${formatCurrency(stock.startPrice)}`;
+  elements.editorPopup.classList.remove("hidden");
+  document.body.classList.add("popup-open");
+  syncPopupSummary();
 }
 
-function closeStockModal() {
-  clearLongPress();
-  state.modalStockId = null;
-  elements.stockModal.classList.add("hidden");
-  elements.stockModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("modal-open");
+function handleNumpadClick(event) {
+  const button = event.target.closest("[data-numpad-key]");
+
+  if (!button || !state.popupStockId) {
+    return;
+  }
+
+  const key = button.dataset.numpadKey;
+
+  if (key === "clear") {
+    state.popupInputValue = "0";
+  } else if (key === "backspace") {
+    state.popupInputValue = state.popupInputValue.length > 1
+      ? state.popupInputValue.slice(0, -1)
+      : "0";
+  } else if (/^\d$/.test(key)) {
+    state.popupInputValue = state.popupInputValue === "0"
+      ? key
+      : `${state.popupInputValue}${key}`;
+  }
+
+  const maxShares = getMaxAllowedShares(state.popupStockId);
+  state.popupInputValue = String(clampShares(Number(state.popupInputValue), maxShares));
+  syncPopupSummary();
 }
 
-function syncModalUi() {
-  const stock = getStockById(state.modalStockId);
+function syncPopupSummary() {
+  const stock = getStockById(state.popupStockId);
 
   if (!stock) {
     return;
   }
 
+  const shares = clampShares(Number(state.popupInputValue), getMaxAllowedShares(stock.id));
+  const invested = shares * stock.startPrice;
   const maxShares = getMaxAllowedShares(stock.id);
-  state.modalDraftShares = clampShares(state.modalDraftShares, maxShares);
-  state.modalInputValue = String(state.modalDraftShares);
 
-  elements.modalSlider.max = String(maxShares);
-  elements.modalSlider.value = String(state.modalDraftShares);
-  elements.modalSharesValue.textContent = integerFormatter.format(state.modalDraftShares);
-  elements.modalInvestedValue.textContent = formatCurrency(state.modalDraftShares * stock.startPrice);
-  elements.modalMaxValue.textContent = integerFormatter.format(maxShares);
+  state.popupInputValue = String(shares);
+  elements.popupShareValue.textContent = integerFormatter.format(shares);
+  elements.popupInvestedValue.textContent = formatCurrency(invested);
+  elements.popupMaxValue.textContent = integerFormatter.format(maxShares);
 }
 
-function handleModalSliderInput(event) {
-  state.modalDraftShares = clampShares(Number(event.target.value), getCurrentModalMaxShares());
-  state.modalInputValue = String(state.modalDraftShares);
-  syncModalUi();
-}
-
-function handleNumpadClick(event) {
-  const button = event.target.closest("[data-key]");
-
-  if (!button) {
-    return;
-  }
-
-  const key = button.dataset.key;
-
-  if (key === "clear") {
-    state.modalInputValue = "0";
-  } else if (key === "backspace") {
-    state.modalInputValue = state.modalInputValue.length > 1
-      ? state.modalInputValue.slice(0, -1)
-      : "0";
-  } else if (/^\d$/.test(key)) {
-    state.modalInputValue = state.modalInputValue === "0"
-      ? key
-      : `${state.modalInputValue}${key}`;
-  }
-
-  state.modalDraftShares = clampShares(Number(state.modalInputValue), getCurrentModalMaxShares());
-  state.modalInputValue = String(state.modalDraftShares);
-  syncModalUi();
-}
-
-function applyModalShares() {
-  const stockId = state.modalStockId;
+function savePopupValue() {
+  const stockId = state.popupStockId;
 
   if (!stockId) {
     return;
   }
 
-  if (state.modalDraftShares > 0) {
-    state.allocations[stockId] = state.modalDraftShares;
+  const nextShares = clampShares(Number(state.popupInputValue), getMaxAllowedShares(stockId));
+
+  if (nextShares > 0) {
+    state.allocations[stockId] = nextShares;
   } else {
     delete state.allocations[stockId];
   }
 
   persistAllocations();
-  closeStockModal();
+  closePopup();
   renderAll();
 }
 
+function closePopup() {
+  state.popupStockId = null;
+  state.popupInputValue = "0";
+  elements.editorPopup.classList.add("hidden");
+  document.body.classList.remove("popup-open");
+}
+
 function handleWindowKeyDown(event) {
-  if (event.key === "Escape" && !elements.stockModal.classList.contains("hidden")) {
-    closeStockModal();
+  if (event.key === "Escape" && state.popupStockId) {
+    closePopup();
   }
 }
 
@@ -281,10 +213,6 @@ function getMaxAllowedShares(stockId) {
   const investedWithoutCurrent = getTotalAllocated() - currentShares * stock.startPrice;
   const availableBudget = STOCK_APP_DATA.startBudget - investedWithoutCurrent;
   return Math.max(0, Math.floor(availableBudget / stock.startPrice));
-}
-
-function getCurrentModalMaxShares() {
-  return getMaxAllowedShares(state.modalStockId);
 }
 
 function getStockById(stockId) {

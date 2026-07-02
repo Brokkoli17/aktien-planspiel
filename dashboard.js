@@ -59,8 +59,8 @@ function renderChart(submissions) {
       <div class="dashboard-columns dashboard-columns-empty">
         <div class="dashboard-y-axis">
           <span>10</span>
-          <span>5</span>
           <span>0</span>
+          <span>-10</span>
         </div>
         <div class="dashboard-plot">
           <div class="dashboard-grid-line dashboard-grid-line-top"></div>
@@ -79,8 +79,8 @@ function renderChart(submissions) {
     <div class="dashboard-columns">
       <div class="dashboard-y-axis">
         <span>${formatAxisValue(maxAbsProfit)}</span>
-        <span>${formatAxisValue(maxAbsProfit / 2)}</span>
         <span>0</span>
+        <span>${formatAxisValue(-maxAbsProfit)}</span>
       </div>
       <div class="dashboard-plot">
         <div class="dashboard-grid-line dashboard-grid-line-top"></div>
@@ -95,16 +95,19 @@ function renderChart(submissions) {
 }
 
 function renderColumn(item, maxAbsProfit) {
-  const percent = Math.max(8, Math.round((Math.abs(item.profit) / maxAbsProfit) * 100));
+  const percent = Math.max(8, Math.round((Math.abs(item.profit) / maxAbsProfit) * 50));
   const colorClass = item.profit >= 0
     ? "dashboard-column-bar-positive"
     : "dashboard-column-bar-negative";
+  const directionClass = item.profit >= 0
+    ? "dashboard-column-bar-up"
+    : "dashboard-column-bar-down";
 
   return `
     <div class="dashboard-column-item" title="${formatCurrency(item.profit)}">
       <div class="dashboard-column-slot">
         <div
-          class="dashboard-column-bar ${colorClass}"
+          class="dashboard-column-bar ${colorClass} ${directionClass}"
           style="height:${percent}%"
         ></div>
       </div>
