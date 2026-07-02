@@ -45,36 +45,71 @@ async function loadDashboard() {
     elements.dashboardStatus.textContent =
       `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE")}`;
 
-    if (!filtered.length) {
-      elements.chartEmpty.classList.remove("hidden");
-      elements.chartArea.innerHTML = "";
-      return;
-    }
-
-    elements.chartEmpty.classList.add("hidden");
+    elements.chartEmpty.classList.toggle("hidden", filtered.length > 0);
     renderChart(filtered);
   } catch {
     elements.dashboardStatus.textContent = "Dashboard konnte nicht geladen werden.";
+    renderChart([]);
   }
 }
 
 function renderChart(submissions) {
-  const maxProfit = Math.max(...submissions.map((item) => Math.abs(item.profit)), 1);
-  elements.chartArea.innerHTML = submissions
-    .map((item) => {
-      const width = Math.max(4, Math.round((Math.abs(item.profit) / maxProfit) * 100));
-      const directionClass = item.profit >= 0 ? "chart-bar-positive" : "chart-bar-negative";
-      return `
-        <div class="chart-row">
-          <span class="chart-label">${item.participantId}</span>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar ${directionClass}" style="width:${width}%"></div>
-          </div>
-          <strong class="${item.profit >= 0 ? "positive" : "negative"}">${formatCurrency(item.profit)}</strong>
+  if (!submissions.length) {
+    elements.chartArea.innerHTML = `
+      <div class="dashboard-columns dashboard-columns-empty">
+        <div class="dashboard-y-axis">
+          <span>10</span>
+          <span>5</span>
+          <span>0</span>
         </div>
-      `;
-    })
-    .join("");
+        <div class="dashboard-plot">
+          <div class="dashboard-grid-line dashboard-grid-line-top"></div>
+          <div class="dashboard-grid-line dashboard-grid-line-middle"></div>
+          <div class="dashboard-grid-line dashboard-grid-line-bottom"></div>
+          <div class="dashboard-placeholder">Noch keine Ergebnisse vorhanden</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const maxAbsProfit = Math.max(...submissions.map((item) => Math.abs(item.profit)), 1);
+
+  elements.chartArea.innerHTML = `
+    <div class="dashboard-columns">
+      <div class="dashboard-y-axis">
+        <span>${formatAxisValue(maxAbsProfit)}</span>
+        <span>${formatAxisValue(maxAbsProfit / 2)}</span>
+        <span>0</span>
+      </div>
+      <div class="dashboard-plot">
+        <div class="dashboard-grid-line dashboard-grid-line-top"></div>
+        <div class="dashboard-grid-line dashboard-grid-line-middle"></div>
+        <div class="dashboard-grid-line dashboard-grid-line-bottom"></div>
+        <div class="dashboard-columns-list">
+          ${submissions.map((item) => renderColumn(item, maxAbsProfit)).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderColumn(item, maxAbsProfit) {
+  const percent = Math.max(8, Math.round((Math.abs(item.profit) / maxAbsProfit) * 100));
+  const colorClass = item.profit >= 0
+    ? "dashboard-column-bar-positive"
+    : "dashboard-column-bar-negative";
+
+  return `
+    <div class="dashboard-column-item" title="${formatCurrency(item.profit)}">
+      <div class="dashboard-column-slot">
+        <div
+          class="dashboard-column-bar ${colorClass}"
+          style="height:${percent}%"
+        ></div>
+      </div>
+    </div>
+  `;
 }
 
 async function resetDashboard() {
@@ -89,6 +124,10 @@ async function resetDashboard() {
 
 function formatCurrency(value) {
   return currencyFormatter.format(value);
+}
+
+function formatAxisValue(value) {
+  return Math.round(value).toString();
 }
 
 function getCollectorUrl() {

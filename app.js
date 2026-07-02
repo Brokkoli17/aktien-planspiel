@@ -10,7 +10,12 @@ clearLegacyStorage();
 
 const state = {
   allocations: loadAllocations(),
-  dragStockId: null
+  pressHandle: null,
+  pressStockId: null,
+  pressTriggered: false,
+  modalStockId: null,
+  modalDraftShares: 0,
+  modalInputValue: "0"
 };
 
 const currencyFormatter = new Intl.NumberFormat("de-DE", {
@@ -29,7 +34,18 @@ const elements = {
   budgetProgress: document.querySelector("#budget-progress"),
   evaluate2022Button: document.querySelector("#evaluate-2022-button"),
   evaluate2025Button: document.querySelector("#evaluate-2025-button"),
-  sliderList: document.querySelector("#stocks-slider")
+  sliderList: document.querySelector("#stocks-slider"),
+  stockModal: document.querySelector("#stock-modal"),
+  modalBackdrop: document.querySelector("#modal-backdrop"),
+  modalSaveButton: document.querySelector("#modal-save-button"),
+  modalStockName: document.querySelector("#modal-stock-name"),
+  modalStockMeta: document.querySelector("#modal-stock-meta"),
+  modalSharesValue: document.querySelector("#modal-shares-value"),
+  modalInvestedValue: document.querySelector("#modal-invested-value"),
+  modalMaxValue: document.querySelector("#modal-max-value"),
+  modalSlider: document.querySelector("#modal-slider"),
+  modalApplyButton: document.querySelector("#modal-apply-button"),
+  modalNumpad: document.querySelector(".modal-numpad")
 };
 
 elements.startBudget.textContent = formatCurrency(STOCK_APP_DATA.startBudget);
@@ -44,6 +60,13 @@ elements.evaluate2025Button.addEventListener("click", () => {
   openResultsPage("2025");
 });
 
+elements.modalBackdrop.addEventListener("click", closeStockModal);
+elements.modalSaveButton.addEventListener("click", applyModalShares);
+elements.modalApplyButton.addEventListener("click", applyModalShares);
+elements.modalSlider.addEventListener("input", handleModalSliderInput);
+elements.modalNumpad.addEventListener("click", handleNumpadClick);
+window.addEventListener("keydown", handleWindowKeyDown);
+
 function renderAll() {
   renderSliderList();
   updateBudgetSummary();
@@ -53,8 +76,14 @@ function renderSliderList() {
   const stocks = STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
   elements.sliderList.innerHTML = stocks.map((stock) => renderSliderRow(stock)).join("");
 
-  document.querySelectorAll("[data-drag-stock-id]").forEach((card) => {
+  document.querySelectorAll("[data-stock-id]").forEach((card) => {
     card.addEventListener("pointerdown", handleRowPointerDown);
+    card.addEventListener("pointerup", clearLongPress);
+    card.addEventListener("pointerleave", clearLongPress);
+    card.addEventListener("pointercancel", clearLongPress);
+    card.addEventListener("dblclick", handleRowDoubleClick);
+    card.addEventListener("keydown", handleRowKeyDown);
+    card.addEventListener("contextmenu", handleRowContextMenu);
   });
 }
 
@@ -68,8 +97,10 @@ function renderSliderRow(stock) {
       <div
         class="row-slider-card"
         style="--row-fill:${fill}%"
-        data-drag-stock-id="${stock.id}"
-        data-max-shares="${maxShares}"
+        data-stock-id="${stock.id}"
+        tabindex="0"
+        role="button"
+        aria-label="${escapeHtml(stock.name)} bearbeiten"
       >
         <span class="row-name">${escapeHtml(stock.name)}</span>
         <span class="row-symbol">${escapeHtml(stock.symbol)}</span>
@@ -81,54 +112,145 @@ function renderSliderRow(stock) {
 }
 
 function handleRowPointerDown(event) {
-  state.dragStockId = event.currentTarget.dataset.dragStockId;
-  updateSharesFromPointer(event);
-  window.addEventListener("pointermove", handleWindowPointerMove);
-  window.addEventListener("pointerup", handleWindowPointerUp);
-}
-
-function handleWindowPointerMove(event) {
-  if (!state.dragStockId) {
+  if (event.button !== undefined && event.button !== 0) {
     return;
   }
 
-  updateSharesFromPointer(event);
+  clearLongPress();
+  state.pressStockId = event.currentTarget.dataset.stockId;
+  state.pressTriggered = false;
+  state.pressHandle = window.setTimeout(() => {
+    state.pressTriggered = true;
+    openStockModal(state.pressStockId);
+  }, 350);
 }
 
-function handleWindowPointerUp() {
-  state.dragStockId = null;
-  window.removeEventListener("pointermove", handleWindowPointerMove);
-  window.removeEventListener("pointerup", handleWindowPointerUp);
+function handleRowDoubleClick(event) {
+  openStockModal(event.currentTarget.dataset.stockId);
 }
 
-function updateSharesFromPointer(event) {
-  const stockId = state.dragStockId;
-  const card = document.querySelector(`[data-drag-stock-id="${stockId}"]`);
+function handleRowKeyDown(event) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    openStockModal(event.currentTarget.dataset.stockId);
+  }
+}
 
-  if (!card) {
+function handleRowContextMenu(event) {
+  event.preventDefault();
+  openStockModal(event.currentTarget.dataset.stockId);
+}
+
+function clearLongPress() {
+  if (state.pressHandle) {
+    window.clearTimeout(state.pressHandle);
+  }
+
+  state.pressHandle = null;
+  state.pressStockId = null;
+}
+
+function openStockModal(stockId) {
+  clearLongPress();
+  const stock = getStockById(stockId);
+
+  if (!stock) {
     return;
   }
 
-  const rect = card.getBoundingClientRect();
-  const pointerX = Math.min(Math.max(event.clientX, rect.left), rect.right);
-  const ratio = rect.width <= 0 ? 0 : (pointerX - rect.left) / rect.width;
-  const visualMaxShares = Number(card.dataset.maxShares || 0);
-  const requestedShares = sanitizeShareCount(ratio * visualMaxShares);
-  const stock = STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
-  const currentShares = state.allocations[stockId] ?? 0;
-  const investedWithoutCurrent = getTotalAllocated() - currentShares * stock.startPrice;
-  const availableBudget = STOCK_APP_DATA.startBudget - investedWithoutCurrent;
-  const maxAllowedShares = Math.floor(availableBudget / stock.startPrice);
-  const nextShares = Math.max(0, Math.min(requestedShares, maxAllowedShares));
+  state.modalStockId = stockId;
+  state.modalDraftShares = state.allocations[stockId] ?? 0;
+  state.modalInputValue = String(state.modalDraftShares);
 
-  if (nextShares > 0) {
-    state.allocations[stockId] = nextShares;
+  elements.modalStockName.textContent = stock.name;
+  elements.modalStockMeta.textContent = `${stock.symbol} · Kurs 2021: ${formatCurrency(stock.startPrice)}`;
+  elements.stockModal.classList.remove("hidden");
+  elements.stockModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  syncModalUi();
+}
+
+function closeStockModal() {
+  clearLongPress();
+  state.modalStockId = null;
+  elements.stockModal.classList.add("hidden");
+  elements.stockModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function syncModalUi() {
+  const stock = getStockById(state.modalStockId);
+
+  if (!stock) {
+    return;
+  }
+
+  const maxShares = getMaxAllowedShares(stock.id);
+  state.modalDraftShares = clampShares(state.modalDraftShares, maxShares);
+  state.modalInputValue = String(state.modalDraftShares);
+
+  elements.modalSlider.max = String(maxShares);
+  elements.modalSlider.value = String(state.modalDraftShares);
+  elements.modalSharesValue.textContent = integerFormatter.format(state.modalDraftShares);
+  elements.modalInvestedValue.textContent = formatCurrency(state.modalDraftShares * stock.startPrice);
+  elements.modalMaxValue.textContent = integerFormatter.format(maxShares);
+}
+
+function handleModalSliderInput(event) {
+  state.modalDraftShares = clampShares(Number(event.target.value), getCurrentModalMaxShares());
+  state.modalInputValue = String(state.modalDraftShares);
+  syncModalUi();
+}
+
+function handleNumpadClick(event) {
+  const button = event.target.closest("[data-key]");
+
+  if (!button) {
+    return;
+  }
+
+  const key = button.dataset.key;
+
+  if (key === "clear") {
+    state.modalInputValue = "0";
+  } else if (key === "backspace") {
+    state.modalInputValue = state.modalInputValue.length > 1
+      ? state.modalInputValue.slice(0, -1)
+      : "0";
+  } else if (/^\d$/.test(key)) {
+    state.modalInputValue = state.modalInputValue === "0"
+      ? key
+      : `${state.modalInputValue}${key}`;
+  }
+
+  state.modalDraftShares = clampShares(Number(state.modalInputValue), getCurrentModalMaxShares());
+  state.modalInputValue = String(state.modalDraftShares);
+  syncModalUi();
+}
+
+function applyModalShares() {
+  const stockId = state.modalStockId;
+
+  if (!stockId) {
+    return;
+  }
+
+  if (state.modalDraftShares > 0) {
+    state.allocations[stockId] = state.modalDraftShares;
   } else {
     delete state.allocations[stockId];
   }
 
   persistAllocations();
+  closeStockModal();
   renderAll();
+}
+
+function handleWindowKeyDown(event) {
+  if (event.key === "Escape" && !elements.stockModal.classList.contains("hidden")) {
+    closeStockModal();
+  }
 }
 
 function updateBudgetSummary() {
@@ -143,9 +265,30 @@ function updateBudgetSummary() {
 
 function getTotalAllocated() {
   return Object.entries(state.allocations).reduce((sum, [stockId, shares]) => {
-    const stock = STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
-    return sum + shares * stock.startPrice;
+    const stock = getStockById(stockId);
+    return stock ? sum + shares * stock.startPrice : sum;
   }, 0);
+}
+
+function getMaxAllowedShares(stockId) {
+  const stock = getStockById(stockId);
+
+  if (!stock) {
+    return 0;
+  }
+
+  const currentShares = state.allocations[stockId] ?? 0;
+  const investedWithoutCurrent = getTotalAllocated() - currentShares * stock.startPrice;
+  const availableBudget = STOCK_APP_DATA.startBudget - investedWithoutCurrent;
+  return Math.max(0, Math.floor(availableBudget / stock.startPrice));
+}
+
+function getCurrentModalMaxShares() {
+  return getMaxAllowedShares(state.modalStockId);
+}
+
+function getStockById(stockId) {
+  return STOCK_APP_DATA.stocks.find((item) => item.id === stockId);
 }
 
 function loadAllocations() {
@@ -197,6 +340,14 @@ function sanitizeShareCount(value) {
   }
 
   return Math.round(value);
+}
+
+function clampShares(value, maxShares) {
+  if (Number.isNaN(value) || value < 0) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(Math.round(value), maxShares));
 }
 
 function escapeHtml(value) {

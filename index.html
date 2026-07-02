@@ -39,9 +39,9 @@
 
     <main class="page">
       <section class="intro card">
-        <p class="version-badge">v5</p>
+        <p class="version-badge">v6</p>
         <p>
-          Waehle ganze Aktien. Die komplette Zeile dient als Schieberegler.
+          Druecke eine Aktie laenger, um die Stueckzahl im Vollbild-Menue zu waehlen.
         </p>
       </section>
 
@@ -65,6 +65,73 @@
         </div>
       </section>
     </main>
+
+    <div id="stock-modal" class="modal hidden" aria-hidden="true">
+      <div id="modal-backdrop" class="modal-backdrop"></div>
+      <section
+        class="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-stock-name"
+      >
+        <div class="modal-header">
+          <div>
+            <p class="variant-label">Aktie bearbeiten</p>
+            <h2 id="modal-stock-name">Aktie</h2>
+            <p id="modal-stock-meta" class="modal-meta"></p>
+          </div>
+          <button id="modal-save-button" type="button" class="secondary-button">
+            Speichern
+          </button>
+        </div>
+
+        <div class="modal-summary">
+          <div class="modal-summary-box">
+            <span>Stueckzahl</span>
+            <strong id="modal-shares-value">0</strong>
+          </div>
+          <div class="modal-summary-box">
+            <span>Investiert</span>
+            <strong id="modal-invested-value">0,00 €</strong>
+          </div>
+          <div class="modal-summary-box">
+            <span>Maximal</span>
+            <strong id="modal-max-value">0</strong>
+          </div>
+        </div>
+
+        <div class="modal-slider-block">
+          <input
+            id="modal-slider"
+            class="modal-slider"
+            type="range"
+            min="0"
+            max="0"
+            step="1"
+            value="0"
+          />
+        </div>
+
+        <div class="modal-numpad">
+          <button type="button" data-key="1">1</button>
+          <button type="button" data-key="2">2</button>
+          <button type="button" data-key="3">3</button>
+          <button type="button" data-key="4">4</button>
+          <button type="button" data-key="5">5</button>
+          <button type="button" data-key="6">6</button>
+          <button type="button" data-key="7">7</button>
+          <button type="button" data-key="8">8</button>
+          <button type="button" data-key="9">9</button>
+          <button type="button" data-key="clear" class="secondary-button">C</button>
+          <button type="button" data-key="0">0</button>
+          <button type="button" data-key="backspace" class="secondary-button">←</button>
+        </div>
+
+        <div class="modal-actions">
+          <button id="modal-apply-button" type="button">Uebernehmen</button>
+        </div>
+      </section>
+    </div>
 
     <script src="config.js"></script>
     <script src="data.js"></script>
