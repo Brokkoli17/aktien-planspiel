@@ -38,7 +38,6 @@ const elements = {
   popupInvestedValue: document.querySelector("#popup-invested-value"),
   popupMaxValue: document.querySelector("#popup-max-value"),
   popupPad: document.querySelector("#popup-pad"),
-  popupCancelButton: document.querySelector("#popup-cancel-button"),
   popupSaveButton: document.querySelector("#popup-save-button")
 };
 
@@ -47,7 +46,6 @@ elements.startBudget.textContent = formatCurrency(STOCK_APP_DATA.startBudget);
 elements.evaluate2022Button.addEventListener("click", () => openResultsPage("2022"));
 elements.popupBackdrop.addEventListener("click", closePopup);
 elements.popupPad.addEventListener("click", handleNumpadClick);
-elements.popupCancelButton.addEventListener("click", closePopup);
 elements.popupSaveButton.addEventListener("click", savePopupValue);
 window.addEventListener("keydown", handleWindowKeyDown);
 
@@ -62,8 +60,8 @@ function renderStocksList() {
   const stocks = STOCK_APP_DATA.stocks.filter((stock) => Boolean(stock.startPrice));
   elements.stocksList.innerHTML = stocks.map((stock) => renderStockRow(stock)).join("");
 
-  document.querySelectorAll("[data-open-popup]").forEach((button) => {
-    button.addEventListener("click", handleOpenPopupClick);
+  document.querySelectorAll("[data-open-popup]").forEach((row) => {
+    row.addEventListener("click", handleOpenPopupClick);
   });
 }
 
@@ -72,18 +70,19 @@ function renderStockRow(stock) {
 
   return `
     <div class="stock-row">
-      <div class="stock-line">
+      <div
+        class="stock-line"
+        data-open-popup="${stock.id}"
+        role="button"
+        tabindex="0"
+        aria-label="${escapeHtml(stock.name)} Stückzahl bearbeiten"
+      >
         <span class="row-name">${escapeHtml(stock.name)}</span>
         <span class="row-symbol">${escapeHtml(stock.symbol)}</span>
         <span class="row-price">${formatCurrency(stock.startPrice)}</span>
-        <button
-          type="button"
-          class="row-shares row-shares-button"
-          data-open-popup="${stock.id}"
-          aria-label="${escapeHtml(stock.name)} Stückzahl bearbeiten"
-        >
+        <span class="row-shares row-shares-button">
           ${integerFormatter.format(shares)}
-        </button>
+        </span>
       </div>
     </div>
   `;
@@ -116,13 +115,7 @@ function handleNumpadClick(event) {
 
   const key = button.dataset.numpadKey;
 
-  if (key === "clear") {
-    state.popupInputValue = "0";
-  } else if (key === "backspace") {
-    state.popupInputValue = state.popupInputValue.length > 1
-      ? state.popupInputValue.slice(0, -1)
-      : "0";
-  } else if (/^\d$/.test(key)) {
+  if (/^\d$/.test(key)) {
     state.popupInputValue = state.popupInputValue === "0"
       ? key
       : `${state.popupInputValue}${key}`;
@@ -180,6 +173,12 @@ function closePopup() {
 function handleWindowKeyDown(event) {
   if (event.key === "Escape" && state.popupStockId) {
     closePopup();
+    return;
+  }
+
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches("[data-open-popup]")) {
+    event.preventDefault();
+    handleOpenPopupClick({ currentTarget: event.target });
   }
 }
 

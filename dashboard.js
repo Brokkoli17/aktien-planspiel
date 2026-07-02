@@ -1,6 +1,5 @@
 const appConfig = window.STOCK_APP_CONFIG || {};
 const state = {
-  year: "2022",
   pollHandle: null
 };
 
@@ -10,77 +9,60 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
 });
 
 const elements = {
-  dashboardYear: document.querySelector("#dashboard-year"),
-  dashboardCount: document.querySelector("#dashboard-count"),
+  dashboardCount2022: document.querySelector("#dashboard-count-2022"),
+  dashboardCount2026: document.querySelector("#dashboard-count-2026"),
   dashboardStatus: document.querySelector("#dashboard-status"),
-  chartEmpty: document.querySelector("#chart-empty"),
-  chartArea: document.querySelector("#chart-area"),
-  stockChartArea: document.querySelector("#stock-chart-area"),
-  stockChartTitle: document.querySelector("#stock-chart-title"),
-  year2022Button: document.querySelector("#dashboard-2022-button"),
-  year2026Button: document.querySelector("#dashboard-2026-button"),
+  chartEmpty2022: document.querySelector("#chart-empty-2022"),
+  chartEmpty2026: document.querySelector("#chart-empty-2026"),
+  chartArea2022: document.querySelector("#chart-area-2022"),
+  chartArea2026: document.querySelector("#chart-area-2026"),
   resetButton: document.querySelector("#dashboard-reset-button")
 };
 
-elements.year2022Button.addEventListener("click", () => setYear("2022"));
-elements.year2026Button.addEventListener("click", () => setYear("2026"));
 elements.resetButton.addEventListener("click", resetDashboard);
 
-setYear("2022");
+loadDashboard();
 state.pollHandle = window.setInterval(loadDashboard, 2000);
-
-function setYear(year) {
-  state.year = year;
-  elements.dashboardYear.textContent = year;
-  elements.stockChartTitle.textContent = `Gewinn / Verlust der Aktien ${year}`;
-  loadDashboard();
-  renderStockChart();
-}
 
 async function loadDashboard() {
   try {
     const response = await fetch(`${getCollectorUrl()}/api/submissions`);
     const submissions = await response.json();
-    const filtered = submissions
-      .filter((item) => item.year === state.year)
+    const data2022 = submissions
+      .filter((item) => item.year === "2022")
+      .sort((left, right) => right.profit - left.profit);
+    const data2026 = submissions
+      .filter((item) => item.year === "2026")
       .sort((left, right) => right.profit - left.profit);
 
-    elements.dashboardCount.textContent = String(filtered.length);
+    elements.dashboardCount2022.textContent = String(data2022.length);
+    elements.dashboardCount2026.textContent = String(data2026.length);
     elements.dashboardStatus.textContent =
       `Zuletzt aktualisiert: ${new Date().toLocaleTimeString("de-DE")}`;
 
-    elements.chartEmpty.classList.toggle("hidden", filtered.length > 0);
-    renderParticipantChart(filtered);
+    renderYearChart("2022", data2022);
+    renderYearChart("2026", data2026);
   } catch {
     elements.dashboardStatus.textContent = "Dashboard konnte nicht geladen werden.";
-    renderParticipantChart([]);
+    renderYearChart("2022", []);
+    renderYearChart("2026", []);
   }
 }
 
-function renderParticipantChart(submissions) {
+function renderYearChart(year, submissions) {
+  const emptyElement = year === "2022" ? elements.chartEmpty2022 : elements.chartEmpty2026;
+  const areaElement = year === "2022" ? elements.chartArea2022 : elements.chartArea2026;
+
+  emptyElement.classList.toggle("hidden", submissions.length > 0);
+
   if (!submissions.length) {
-    elements.chartArea.innerHTML = renderColumnChartShell([], 10, true);
+    areaElement.innerHTML = renderColumnChartShell([], 10, true);
     return;
   }
 
   const maxAbsProfit = Math.max(...submissions.map((item) => Math.abs(item.profit)), 1);
   const columns = submissions.map((item) => renderColumn(item.profit, maxAbsProfit));
-  elements.chartArea.innerHTML = renderColumnChartShell(columns, maxAbsProfit, false);
-}
-
-function renderStockChart() {
-  const entries = STOCK_APP_DATA.stocks
-    .filter((stock) => stock.startPrice)
-    .map((stock) => {
-      const comparisonPrice = getPriceForYear(stock, state.year);
-      return {
-        profit: comparisonPrice - stock.startPrice
-      };
-    });
-
-  const maxAbsProfit = Math.max(...entries.map((item) => Math.abs(item.profit)), 1);
-  const columns = entries.map((item) => renderColumn(item.profit, maxAbsProfit));
-  elements.stockChartArea.innerHTML = renderColumnChartShell(columns, maxAbsProfit, false);
+  areaElement.innerHTML = renderColumnChartShell(columns, maxAbsProfit, false);
 }
 
 function renderColumnChartShell(columns, maxAbsProfit, empty) {
@@ -131,10 +113,6 @@ async function resetDashboard() {
 
 function formatCurrency(value) {
   return currencyFormatter.format(value);
-}
-
-function getPriceForYear(stock, year) {
-  return stock.prices[year] ?? stock.prices["2025"] ?? stock.startPrice ?? 0;
 }
 
 function formatAxisValue(value) {

@@ -19,12 +19,12 @@
         </div>
         <div class="budget-box result-budget-box">
           <div class="budget-line">
-            <span>Ansicht</span>
-            <strong id="dashboard-year">2022</strong>
+            <span>2022 Teilnehmer</span>
+            <strong id="dashboard-count-2022">0</strong>
           </div>
           <div class="budget-line">
-            <span>Teilnehmer</span>
-            <strong id="dashboard-count">0</strong>
+            <span>2026 Teilnehmer</span>
+            <strong id="dashboard-count-2026">0</strong>
           </div>
         </div>
       </div>
@@ -34,8 +34,6 @@
       <section class="actions card">
         <p class="variant-label">Steuerung</p>
         <div class="action-buttons">
-          <button id="dashboard-2022-button" type="button" class="secondary-button">2022</button>
-          <button id="dashboard-2026-button" type="button" class="secondary-button">2026</button>
           <button id="dashboard-reset-button" type="button" class="danger-button">Alle Ergebnisse loeschen</button>
         </div>
         <p id="dashboard-status" class="sync-status"></p>
@@ -44,24 +42,27 @@
       <section class="results card">
         <div class="results-header">
           <div>
-            <p class="variant-label">Teilnehmer</p>
-            <h2>Gewinn / Verlust</h2>
+            <p class="variant-label">Teilnehmer 2022</p>
+            <h2>Gewinn / Verlust 2022</h2>
           </div>
         </div>
-        <div id="chart-empty" class="results-empty hidden">
-          Noch keine Ergebnisse eingegangen.
+        <div id="chart-empty-2022" class="results-empty hidden">
+          Noch keine Ergebnisse fuer 2022 eingegangen.
         </div>
-        <div id="chart-area" class="chart-area"></div>
+        <div id="chart-area-2022" class="chart-area"></div>
       </section>
 
       <section class="results card">
         <div class="results-header">
           <div>
-            <p class="variant-label">Aktienwerte</p>
-            <h2 id="stock-chart-title">Gewinn / Verlust der Aktien 2022</h2>
+            <p class="variant-label">Teilnehmer 2026</p>
+            <h2>Gewinn / Verlust 2026</h2>
           </div>
         </div>
-        <div id="stock-chart-area" class="chart-area"></div>
+        <div id="chart-empty-2026" class="results-empty hidden">
+          Noch keine Ergebnisse fuer 2026 eingegangen.
+        </div>
+        <div id="chart-area-2026" class="chart-area"></div>
       </section>
     </main>
 

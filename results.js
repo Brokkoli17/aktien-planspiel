@@ -42,6 +42,7 @@ renderResultsPage();
 async function renderResultsPage() {
   const allocations = loadAllocations();
   const positions = getSelectedPositions(allocations, selectedYear);
+  const participantId = getParticipantId();
 
   elements.resultYear.textContent = selectedYear;
 
@@ -66,13 +67,25 @@ async function renderResultsPage() {
   renderBreakdown(positions);
 
   await submitResult({
-    participantId: getParticipantId(),
+    participantId,
     year: selectedYear,
     invested: totalInvested,
     totalValue: depotValue,
     profit,
     returnRate
   });
+
+  const summary2026 = buildYearSummary(allocations, "2026");
+  if (summary2026) {
+    await submitResult({
+      participantId,
+      year: "2026",
+      invested: summary2026.totalInvested,
+      totalValue: summary2026.depotValue,
+      profit: summary2026.profit,
+      returnRate: summary2026.returnRate
+    });
+  }
 }
 
 function renderSummaryBars(depotValue) {
@@ -131,6 +144,28 @@ function getSelectedPositions(allocations, year) {
         comparisonValue
       };
     });
+}
+
+function buildYearSummary(allocations, year) {
+  const positions = getSelectedPositions(allocations, year);
+
+  if (!positions.length) {
+    return null;
+  }
+
+  const totalInvested = positions.reduce((sum, position) => sum + position.amount, 0);
+  const totalStockValue = positions.reduce((sum, position) => sum + position.comparisonValue, 0);
+  const cashLeft = STOCK_APP_DATA.startBudget - totalInvested;
+  const depotValue = cashLeft + totalStockValue;
+  const profit = depotValue - STOCK_APP_DATA.startBudget;
+  const returnRate = profit / STOCK_APP_DATA.startBudget;
+
+  return {
+    totalInvested,
+    depotValue,
+    profit,
+    returnRate
+  };
 }
 
 function getPriceForYear(stock, year) {

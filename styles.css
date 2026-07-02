@@ -163,6 +163,7 @@ button {
   align-items: center;
   min-height: 50px;
   padding: 10px 12px;
+  cursor: pointer;
 }
 
 .row-name,
@@ -223,13 +224,13 @@ button {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(420px, calc(100% - 24px));
+  width: min(300px, calc(100% - 24px));
   transform: translate(-50%, -50%);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
   box-shadow: var(--shadow);
-  padding: 16px;
+  padding: 14px;
 }
 
 .editor-popup-meta {
@@ -239,16 +240,16 @@ button {
 
 .editor-popup-summary {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 14px 0;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 10px 0 12px;
 }
 
 .editor-popup-box {
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fff;
-  padding: 10px;
+  padding: 8px 10px;
 }
 
 .editor-popup-box span {
@@ -261,23 +262,18 @@ button {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .editor-popup-pad button {
-  min-height: 52px;
-  border-radius: 14px;
-  font-size: 1.1rem;
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 700;
 }
 
-.editor-popup-actions {
-  display: flex;
-  gap: 10px;
-}
-
 .editor-popup-actions button {
-  flex: 1 1 0;
+  width: 100%;
 }
 
 .results-empty {
@@ -593,16 +589,10 @@ button {
   }
 
   .editor-popup-panel {
-    width: calc(100% - 20px);
-  }
-
-  .editor-popup-summary,
-  .editor-popup-actions {
-    grid-template-columns: 1fr;
-    display: grid;
+    width: min(300px, calc(100% - 20px));
   }
 
   .editor-popup-pad button {
-    min-height: 50px;
+    min-height: 44px;
   }
 }
